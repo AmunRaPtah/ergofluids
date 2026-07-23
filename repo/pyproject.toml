@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ergofluids"
+version = "0.1.0"
+description = "Koopman/DMD and Mori-Zwanzig modeling of macromolecular transport in viscoelastic tissue (research prototype, pre-validation)"
+requires-python = ">=3.10"
+dependencies = [
+    "numpy",
+    "scipy",
+    "pandas",
+    "matplotlib",
+    "pydmd",
+    "pykoopman",
+]
+
+[project.optional-dependencies]
+dev = ["pytest"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
