@@ -269,6 +269,17 @@ curve).**
 | hyaluronan | 1.071 | -557.752 [-621.878, -494.394] | 0.136 [0.107, 0.171] | (B) PASS |
 | collagen (1 mg/mL) | 1.062 | -320.114 [-376.011, -263.517] | 0.300 [0.265, 0.335] | (B) PASS |
 
+![Digitized composite-network MSD curve (blue points, error bars combine reported and digitization
+error in quadrature) with the two pre-registered Gate 5 fits overlaid: a power law (orange, solid)
+and a confined-diffusion model (green, dashed). The power law tracks the data across the full
+range; the confined-diffusion fit systematically deviates, overshooting at short Delta t,
+undershooting mid-range, and flattening before the data does, the same result Table 3 reports as
+a decisive AICc preference for the power law.](figures/fig1_composite_msd_fits.png)
+
+**Figure 1.** Composite-network MSD: digitized data against both Gate 5 fits, point estimates on
+the unperturbed data (power law alpha = 0.49; confined-diffusion tau = 1.42 s), consistent with
+Table 3's bootstrap means.
+
 ### 3.6 DMD-generality test (Gate 6)
 
 `hodmd_fb` failed at all three conditions (Table 4); `bopdmd` and `subspace` both passed cleanly at
@@ -288,6 +299,14 @@ growing but still inside calibrated coverage (`subspace`).
 | 0.5 | 15/20 | -0.0644 | 18/20 | -0.0154 | 20/20 | +0.0055 |
 | 0.7 | 12/20 | -0.0994 | 20/20 | -0.0067 | 20/20 | +0.0367 |
 | 1.0 | 15/20 | -0.1013 | 20/20 | -0.0019 | 19/20 | +0.0818 |
+
+![Bootstrap-CI coverage out of 20 repeats, across all six exponent estimators tested in this
+project, at each true exponent value, against the 18/20 pass bar (dashed). loglog, dmd (HODMD),
+and ssa are Gate 0b; hodmd_fb, bopdmd, and subspace are Gate 6. hodmd_fb sits below the bar at
+every condition, most severely at alpha_true = 0.7; bopdmd and subspace clear it at every
+condition.](figures/fig2_coverage_comparison.png)
+
+**Figure 2.** Coverage comparison across all six tested estimators, Gate 0b and Gate 6 combined.
 
 ## 4. Discussion
 
