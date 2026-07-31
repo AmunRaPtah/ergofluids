@@ -149,6 +149,24 @@ Alpha=0.7 and alpha=1.0 for `ssa` (Gate 0) were only tested at n=20 (19/20,
 18/20). If either becomes load-bearing for a future claim, run the same
 100-repeat check used for alpha=0.5 before trusting it.
 
+## Gate 7 (2026-07-31): digitization pipeline accuracy against synthetic ground truth
+
+`docs/gate-result-gate7-digitization-accuracy.md`: fills the "contribution 3" gap named in
+`docs/publication-angle.md`. Built a synthetic log-log panel with known `(x, y, error)` ground truth
+(30 points, `y = 2.0 * x^0.65` plus fixed-seed jitter, unrelated to any real exponent used elsewhere
+in this project), rendered it through the project's own PDF-to-PNG path
+(`digitize_common.render_page`, i.e. actual `pdftoppm`), computed axis calibration analytically
+(verified against detected axis-frame pixel positions in a pre-registration smoke test, not hand-read
+from the image), and ran the unmodified `digitize_common.extract_curve` function both real
+digitization scripts use, pre-registered in `docs/BUILD_PLAN.md` ("Gate 7") before running. **Result:
+PASS on both pre-registered checks, well inside every threshold**: curve-following median relative
+error 0.35% (bar: <2%) across 449 extracted bins, error-bar recovery median relative error 1.15% with
+Pearson r=0.991 against ground truth (bars: <15%, r>0.8) across the 30 known vertices. Scope, stated
+before running: this validates the shared extraction machinery given correct axis calibration; it
+does not and cannot validate whether the two real scripts' hand-read tick-mark pixel positions were
+themselves correct, since no independent ground truth exists for that step on the real PDF pages.
+Does not touch or reopen any real-data gate or Phase 4.
+
 ## Gotchas
 
 - No raw experimental trajectory data exists publicly for the literature

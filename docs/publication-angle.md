@@ -1,6 +1,6 @@
 # Publication angle
 
-Date: 2026-07-23, updated 2026-07-31 after Gate 5. Written after Gate 4
+Date: 2026-07-23, updated 2026-07-31 after Gate 5 and Gate 7. Written after Gate 4
 (`docs/gate-result-phase3-realdata.md`) returned its result: fail on the pre-registered primary
 criterion, pass on a secondary descriptive check. Everything below is framed against that actual
 outcome, not against a hoped-for one. Gate 5 (`docs/gate-result-phase3-gate5-cagedfit.md`), a
@@ -40,7 +40,16 @@ tissue-like data" story, because Gate 4 did not show that on its primary, locked
    digitization/pixel error), including three documented extraction bugs (frame-line, legend-swatch,
    and tick-mark contamination) and how each was caught and fixed. This is a reusable, checkable
    procedure for anyone digitizing figures for quantitative reuse, distinct from manual
-   point-and-click tools, and is worth describing on its own regardless of what Gate 4 concluded.
+   point-and-click tools, and is worth describing on its own regardless of what Gate 4 concluded. Now
+   backed by a quantified accuracy number rather than only the qualitative shape checks in
+   `test_digitization.py`: Gate 7 (`docs/gate-result-gate7-digitization-accuracy.md`) tested the
+   shared extraction machinery against a synthetic panel with known ground truth, rendered through
+   the same PDF-to-PNG path the real scripts use, and passed both pre-registered checks well inside
+   threshold (curve-following median relative error 0.35% against a <2% bar; error-bar recovery
+   median relative error 1.15% with Pearson r=0.991 against a <15%/>0.8 bar). Scope, stated in the
+   gate itself: this validates the extraction code given correct axis calibration, not whether the
+   two real scripts' hand-read tick-mark pixel positions were themselves correct, since no
+   independent ground truth exists for that step on the real PDF pages.
 
 ## What is not publishable yet
 
@@ -72,3 +81,8 @@ tissue-like data" story, because Gate 4 did not show that on its primary, locked
   and the digitization methodology both work as designed; two independent real-data tests attempted
   here did not confirm the target signature within their primary criteria" is the warranted claim,
   not a stronger one.
+- The digitization methodology's own accuracy is no longer only qualitatively supported: Gate 7
+  (`docs/gate-result-gate7-digitization-accuracy.md`) tested the shared extraction machinery against
+  synthetic ground truth and passed both pre-registered checks well inside threshold. This closes the
+  "contribution 3" gap named above; the digitization-methodology write-up now has a quantified
+  accuracy number to cite alongside the documented extraction-bug history.

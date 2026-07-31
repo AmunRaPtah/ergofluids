@@ -437,6 +437,94 @@ not rely on HODMD's own two-stage delay-embed-then-forward-simulate procedure.
 This does not change Phase sequencing or reopen Phase 4; Gate 6 is a further generalization test of
 the Gate 0/0b diagnosis, independent of the real-data gates (4, 5).
 
+## Gate 7: digitization pipeline accuracy against synthetic ground truth
+
+**Pre-registered here, before this gate's script is run.** Every gate that used the real digitized
+data (4, 5, and the two figures built for the manuscript) depends on `repo/src/ergofluids/../scripts/
+digitize_common.py`'s shared extraction machinery (`LogAxis`/`LinearAxis` pixel-to-data mapping,
+color masking, `extract_curve`'s column-binning and centroid/spread estimation), applied to
+`digitize_fig4a.py` and `digitize_s14a.py`. Existing tests (`tests/test_digitization.py`) only check
+qualitative shape (does the composite curve plateau, is the composite exponent below the pure
+components) on the real, already-digitized output. No test has ever compared digitized output
+against a case with known ground truth, because no ground truth exists for the real PDF panels. This
+gate closes that gap using a synthetic panel built the same way the real ones were read, where the
+true (x, y, error) values are known exactly because we generate them.
+
+**Scope, stated before running.** This tests the extraction machinery (color masking, column
+binning, pixel-to-data conversion via `extract_curve`) given a *correct* axis calibration. It does
+not and cannot test whether the two real scripts' hand-read tick-mark pixel positions were
+themselves read correctly, since no independent ground truth exists for that step on the real PDF
+pages. The synthetic panel's axis calibration is instead computed analytically (exact, not
+hand-read), isolating the one part of the pipeline that is independently testable.
+
+**Method.** Build a synthetic log-log panel with matplotlib (`fig.dpi=72`, so `ax.transData` display
+pixels equal PDF point-space positions directly, verified empirically before use: predicted vs.
+detected axis-frame pixel positions agreed to within 2px, the frame's own stroke width, on a smoke
+test), matching the real panels' visual style (a single colored line with vertical error-bar
+whiskers at each vertex, log-log axes, no other visible content in the data color). Save to PDF, then
+render through the project's own `digitize_common.render_page` (`pdftoppm -r 400`, the same call the
+two real scripts use) rather than reading the PNG matplotlib would produce directly, so the PDF
+rasterization step is inside the tested path, not bypassed. Axis calibration
+(`LogAxis(pixel0, log10_value0, pixel1, log10_value1)` for both axes) is computed analytically from
+the known `xlim`/`ylim` via the verified `dpi=72` to `pdftoppm -r 400` pixel-scale relationship, not
+hand-read from the image. Curve extraction then calls `extract_curve` (imported unmodified from
+`digitize_common.py`, the actual production function) with default `bin_width`/`marker_halfwidth`,
+exactly as the two real scripts call it.
+
+**Ground truth.** 30 points, `x` log-spaced over 3 decades (1e-2 to 10, matching S14a's range),
+`y = A * x^alpha` with `A=2.0`, `alpha=0.65` (chosen arbitrarily, distinct from any reported or
+estimated exponent elsewhere in this project, to avoid any risk of confusing this accuracy check
+with a real result), plus fixed-seed multiplicative lognormal jitter (`sigma=0.04`) so the panel is
+not a perfectly straight line, matching the visual irregularity of a real digitized curve. Each
+vertex gets a known error-bar half-length of `0.10 * y_true`. Seed 20260731rev7. Points are joined by
+a straight line in log-log space (matching how the real S14a/Fig4a panels present continuous curves,
+not isolated markers), so `extract_curve`'s column-binning has curve pixels to find in every bin
+across the interior, not just at 30 sparse marker locations.
+
+**Two checks, both pre-registered:**
+
+1. **Curve-following accuracy (all extracted bins).** For every bin `extract_curve` returns, compare
+   its recovered `y` against the ground-truth curve's log-log-interpolated value at that bin's `x`
+   (the known straight-line segment between the two bracketing vertices). Pass: median relative
+   error < 2%, 95th-percentile relative error < 8%.
+2. **Error-bar recovery (at the 30 known vertices only, since whiskers are only drawn there).** For
+   the extracted bin nearest each vertex's true `x`, compare recovered `reported_error` against the
+   known true half-length (`0.10 * y_true`). Pass: median relative error < 15% (looser than check 1,
+   since a spread estimate from a handful of pixels per bin is inherently noisier than a centroid
+   estimate), and Pearson correlation between recovered and true error magnitude across the 30
+   vertices > 0.8 (confirms the recovered values track the true ones, not just noise).
+
+**What a pass or fail means, stated before running.** A pass on both checks would show the shared
+extraction machinery recovers known values accurately given correct calibration, supporting (not
+proving beyond the stated scope) that the real Fig4a/S14a digitizations are limited mainly by
+tick-reading precision (a documented, bounded `digitization_error` term already carried through every
+downstream gate) rather than by an undiagnosed flaw in the extraction code itself. A fail on check 1
+would mean the column-binning/centroid logic itself has a bias or noise floor larger than assumed,
+undermining every gate that used the real digitized data. A fail on check 2 specifically would mean
+the `reported_error` column is not a reliable proxy for the paper's own plotted error bars, without
+necessarily undermining the `y` values themselves.
+
+No parameter or criterion changes after seeing the numbers below.
+
+### Gate 7 result
+
+Run 2026-07-31, `repo/scripts/run_gate7.py`, seed 20260731. Full detail and discussion in
+`docs/gate-result-gate7-digitization-accuracy.md`; summary:
+
+| check | metric | result | threshold | pass |
+|---|---|---|---|---|
+| 1: curve-following (n=449 bins) | median relative error | 0.35% | < 2% | yes |
+| 1: curve-following (n=449 bins) | 95th-pct relative error | 0.53% | < 8% | yes |
+| 2: error-bar recovery (n=30 vertices) | median relative error | 1.15% | < 15% | yes |
+| 2: error-bar recovery (n=30 vertices) | Pearson r | 0.991 | > 0.8 | yes |
+
+**Verdict: PASS on both checks**, well inside every pre-registered threshold. The shared
+`extract_curve` machinery recovers known ground truth accurately given correct axis calibration;
+this supports (within the stated scope, restated in the result doc) that the real Fig4a/S14a
+digitizations are limited mainly by tick-reading precision, already carried as `digitization_error`
+in every downstream gate, not by an undiagnosed flaw in the extraction code. Does not reopen Phase 4
+or any real-data gate's verdict.
+
 ## Phase sequencing
 
 1. **Phase 1 (this pass, complete)**: Gate 0 (failed for `dmd`, passed for `ssa` after diagnosis

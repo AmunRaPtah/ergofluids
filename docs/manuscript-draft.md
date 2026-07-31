@@ -4,12 +4,17 @@
 
 Corresponding author: ennyolutogun@gmail.com
 
-**Status:** first full draft, 2026-07-23; updated 2026-07-31 to add the Gate 5 model-based refit and
-the Gate 6 DMD-generality test. Target venue not yet selected. All results below are taken directly
-from `docs/gate-result-phase1-synthetic.md`, `docs/gate-result-phase2-mzmd.md`,
-`docs/gate-result-phase2-gate3-caging.md`, `docs/gate-result-phase3-realdata.md`,
-`docs/gate-result-phase3-gate5-cagedfit.md`, and `docs/gate-result-gate6-dmd-generality.md`; nothing
-here should be edited without also updating (or checking against) those source documents.
+**Status:** first full draft, 2026-07-23; updated 2026-07-31 to add the Gate 5 model-based refit, the
+Gate 6 DMD-generality test, and the Gate 7 digitization-accuracy test. Target venue: arXiv preprint
+(cross-listed physics.bio-ph / physics.data-an) followed by submission to PLOS ONE, chosen because
+its published criteria for publication (journals.plos.org/plosone/s/criteria-for-publication) require
+technical/methodological soundness rather than novelty or impact, and explicitly state negative and
+null results are considered; both fit this paper's mixed-result, pre-registered-gate structure.
+All results below are taken directly from `docs/gate-result-phase1-synthetic.md`,
+`docs/gate-result-phase2-mzmd.md`, `docs/gate-result-phase2-gate3-caging.md`,
+`docs/gate-result-phase3-realdata.md`, `docs/gate-result-phase3-gate5-cagedfit.md`,
+`docs/gate-result-gate6-dmd-generality.md`, and `docs/gate-result-gate7-digitization-accuracy.md`;
+nothing here should be edited without also updating (or checking against) those source documents.
 
 ## Abstract
 
@@ -39,7 +44,9 @@ decisively preferred for the composite network even though the confined model's 
 was well-constrained within the observed range, a sharper negative result than the first test. We
 report this as a mixed result rather than a validation, and discuss why the digitized figure's time
 range likely falls short of the plateau region, alongside a digitization methodology that we believe
-is independently reusable.
+is independently reusable. We separately validated the digitization pipeline's extraction machinery
+against a synthetic panel with known ground truth, rendered through the same PDF-to-image path used
+for the real figures; both pre-registered accuracy checks passed well inside threshold.
 
 ## 1. Introduction
 
@@ -162,6 +169,28 @@ reconstruction algorithm is applied to the same delay-embedded matrix" as the on
 repeats per condition, 150-resample bootstrap CI, 18/20 coverage bar. Each estimator falls back to
 `loglog_fit_exponent` on any fit exception or non-finite reconstruction, with fallback counts
 tracked and reported per condition rather than absorbed silently.
+
+### 2.8 Digitization pipeline validation protocol (Gate 7, pre-registered)
+
+Section 2.4's digitization procedure has no independent ground truth to validate against on the real
+PDF panels. As a separate, later-pre-registered test (`docs/BUILD_PLAN.md`, "Gate 7"), we built a
+synthetic log-log panel with known `(x, y, error)` values, 30 points, `y = 2.0 * Delta t^0.65` plus
+fixed-seed multiplicative lognormal jitter (sigma = 0.04, an exponent and coefficient chosen
+arbitrarily and unrelated to any value reported elsewhere in this study), each with a known
+error-bar half-length of 10% of `y`, joined by a straight line in log-log space to match the
+continuous-curve style of the real panels. The panel was rendered through the same PDF-to-PNG path
+used for the real figures (`pdftoppm` at 400 DPI), and its axis calibration was computed
+analytically from the known plot limits and the verified pixel-scale relationship between the
+figure's point-space and the render resolution, rather than hand-read from the image, so this test
+isolates the extraction machinery (color masking, column binning, pixel-to-data conversion) given a
+*correct* calibration; it does not test whether the real panels' hand-read tick-mark pixel positions
+were themselves correct, since no independent ground truth exists for that step on the real pages.
+The identical, unmodified curve-extraction function used by both real digitization scripts was then
+run on the synthetic panel. Two checks were pre-registered: (1) across every extracted bin along the
+curve, recovered `y` compared against the known log-log-interpolated ground-truth value at that
+bin's `x` (pass: median relative error < 2%, 95th-percentile < 8%); (2) at the 30 known vertices,
+where error-bar whiskers are drawn, recovered `reported_error` compared against the known true
+half-length (pass: median relative error < 15%, Pearson correlation with ground truth > 0.8).
 
 ## 3. Results
 
@@ -308,6 +337,22 @@ condition.](figures/fig2_coverage_comparison.png)
 
 **Figure 2.** Coverage comparison across all six tested estimators, Gate 0b and Gate 6 combined.
 
+### 3.7 Digitization pipeline accuracy (Gate 7)
+
+Both pre-registered checks passed, well inside threshold (Table 5). The extraction machinery
+recovered 449 points from a 1796-pixel-wide plot interior; curve-following median relative error
+(0.35%) was roughly six times tighter than the 2% bar, and error-bar recovery correlated with ground
+truth at r = 0.991 against a 0.8 bar.
+
+**Table 5. Gate 7 accuracy checks against synthetic ground truth.**
+
+| check | metric | result | threshold | pass |
+|---|---|---|---|---|
+| 1: curve-following (n = 449 bins) | median relative error | 0.35% | < 2% | yes |
+| 1: curve-following (n = 449 bins) | 95th-percentile relative error | 0.53% | < 8% | yes |
+| 2: error-bar recovery (n = 30 vertices) | median relative error | 1.15% | < 15% | yes |
+| 2: error-bar recovery (n = 30 vertices) | Pearson r | 0.991 | > 0.8 | yes |
+
 ## 4. Discussion
 
 The two halves of this study point in different directions on the same question, and we report both
@@ -389,7 +434,14 @@ The digitization methodology, tick-calibrated pixel
 extraction with two independently tracked error sources, and three documented, caught-and-fixed
 contamination bugs, is offered as a reusable procedure for anyone needing to extract quantitative
 data from published figures where raw data is unavailable, independent of what this particular
-application concluded.
+application concluded. Gate 7 (Section 3.7) gives this claim a quantified basis rather than a
+qualitative one: given correct axis calibration, the shared extraction machinery recovers known
+ground truth to well under 1% median error, both along a continuous curve and at discrete error-bar
+locations. This does not validate the real panels' hand-read tick-mark calibration itself, which has
+no independent ground truth to check against, but it does narrow where residual uncertainty in the
+real digitized curves can plausibly come from: calibration and rendering precision (already carried
+through every downstream gate as `digitization_error`), not an undiagnosed flaw in the extraction
+code.
 
 ## 5. Limitations
 
@@ -410,7 +462,10 @@ original authors is the only remaining concrete path to a sharper real-data test
 tested only three DMD-family methods, chosen for mechanistic diversity, not an exhaustive survey of
 PyDMD's implemented variants; other variants (for example plain `OptDMD`, `FbDMD` without HODMD's
 delay embedding, or `PiDMD` under various structural constraints) remain untested and are not
-claimed to behave either way.
+claimed to behave either way. Gate 7's synthetic validation of the digitization pipeline (Section
+3.7) is scoped to the extraction machinery given correct axis calibration; it does not and cannot
+independently confirm that the two real panels' hand-read tick-mark pixel positions were themselves
+correct, since no ground truth exists for that step on the real PDF pages.
 
 ## 6. Conclusion
 
@@ -428,7 +483,10 @@ original authors is the one remaining concrete path to a sharper real-data test.
 HODMD bias diagnosis itself was strengthened: a minimal, established bias-correction technique
 applied to HODMD's own procedure did not fix the bias and made it worse, while two mechanistically
 different established methods avoided it cleanly, a more specific and more generalizable finding
-than the original diagnosis alone supported.
+than the original diagnosis alone supported. The digitization methodology was validated against
+synthetic ground truth for the first time in this work, and passed both pre-registered accuracy
+checks well inside threshold, giving the reusable-procedure claim a quantified basis alongside the
+documented extraction-bug history.
 
 ## Competing interests
 
@@ -439,7 +497,7 @@ The author declares no competing interests.
 All code, synthetic data generators, digitization scripts, and gate results are available at
 https://github.com/AmunRaPtah/ergofluids. Digitized figure data (`repo/data/digitized/`) and the
 pre-registered gate criteria (`docs/BUILD_PLAN.md`, `repo/scripts/run_gate4.py`,
-`repo/scripts/run_gate5.py`, `repo/scripts/run_gate6.py`) are included.
+`repo/scripts/run_gate5.py`, `repo/scripts/run_gate6.py`, `repo/scripts/run_gate7.py`) are included.
 
 ## References
 
