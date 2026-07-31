@@ -1,15 +1,19 @@
 # Diagnosing and testing a Koopman/Mori-Zwanzig subdiffusion estimator: a pre-registered gate sequence from synthetic validation to a literature-digitized real-data test
 
+**Short title:** Pre-registered validation of a Koopman/Mori-Zwanzig subdiffusion estimator
+
 **Author:** Eniola Olutogun
+
+**Affiliation:** Hasso Plattner Institute, University of Potsdam, Potsdam, Germany
 
 Corresponding author: ennyolutogun@gmail.com
 
 **Status:** first full draft, 2026-07-23; updated 2026-07-31 to add the Gate 5 model-based refit, the
-Gate 6 DMD-generality test, and the Gate 7 digitization-accuracy test. Target venue: arXiv preprint
-(cross-listed physics.bio-ph / physics.data-an) followed by submission to PLOS ONE, chosen because
-its published criteria for publication (journals.plos.org/plosone/s/criteria-for-publication) require
-technical/methodological soundness rather than novelty or impact, and explicitly state negative and
-null results are considered; both fit this paper's mixed-result, pre-registered-gate structure.
+Gate 6 DMD-generality test, and the Gate 7 digitization-accuracy test. Target venue: PLOS ONE, chosen
+because its published criteria for publication (journals.plos.org/plosone/s/criteria-for-publication)
+require technical/methodological soundness rather than novelty or impact, and explicitly state
+negative and null results are considered; both fit this paper's mixed-result, pre-registered-gate
+structure.
 All results below are taken directly from `docs/gate-result-phase1-synthetic.md`,
 `docs/gate-result-phase2-mzmd.md`, `docs/gate-result-phase2-gate3-caging.md`,
 `docs/gate-result-phase3-realdata.md`, `docs/gate-result-phase3-gate5-cagedfit.md`,
@@ -18,35 +22,29 @@ nothing here should be edited without also updating (or checking against) those 
 
 ## Abstract
 
-We test whether Koopman-operator and Mori-Zwanzig-based methods can recover known subdiffusive
-signatures relevant to macromolecular transport through extracellular hydrogels. We use a
-pre-registered sequence of validation gates: synthetic-data calibration and regime-separation tests
-for three exponent estimators (log-log fitting, Higher-Order Dynamic Mode Decomposition, and a
-Hankel-SVD/SSA variant), synthetic tests of a ported Mori-Zwanzig memory-kernel extension on a
-linear hidden-variable system and a caged-particle system, and a final test against
-literature-digitized real data. During synthetic calibration we diagnosed a systematic bias in
-HODMD when reconstructing power-law-in-time curves, traced it to HODMD's forward-simulation step,
-and fixed it with a denoising-only SSA variant; a pre-registered 100-repeat follow-up confirmed the
-fix closed the gap. A further pre-registered synthetic test asked whether this bias generalizes to
-other established DMD-family methods: a minimal, established bias-correction technique
-(forward-backward operator averaging) applied to the same HODMD configuration did not fix the bias
-and made it measurably worse, while two mechanistically different established methods (Bagging,
-Optimized DMD and Subspace DMD) both avoided it cleanly, sharpening the diagnosis rather than simply
-broadening it. For the real-data test, we digitized Figure 4a and Supplementary Figure S14a
-from Burla et al. (2019), tracking reported and digitization error separately, and applied a
-pre-registered pass/fail criterion for detecting the caging signature of a hyaluronan-collagen
-composite network. The estimators did not detect a statistically significant local slope decrease
-in the digitized MSD curve within propagated uncertainty (the primary, locked criterion), though a
-secondary descriptive check on the intermediate scattering function did show the expected
-qualitative plateau. A follow-up pre-registered test fit an explicit confined-diffusion functional
-form to the same curve and compared it against a global power law by AICc; the power-law model was
-decisively preferred for the composite network even though the confined model's characteristic time
-was well-constrained within the observed range, a sharper negative result than the first test. We
-report this as a mixed result rather than a validation, and discuss why the digitized figure's time
-range likely falls short of the plateau region, alongside a digitization methodology that we believe
-is independently reusable. We separately validated the digitization pipeline's extraction machinery
-against a synthetic panel with known ground truth, rendered through the same PDF-to-image path used
-for the real figures; both pre-registered accuracy checks passed well inside threshold.
+We test whether Koopman-operator and Mori-Zwanzig-based methods recover known subdiffusive signatures
+in macromolecular transport through extracellular hydrogels, using a pre-registered sequence of
+validation gates. Three exponent estimators (log-log fitting, Higher-Order Dynamic Mode Decomposition
+[HODMD], and a Hankel-SVD/SSA variant) were calibrated on synthetic data, a Mori-Zwanzig memory-kernel
+extension was tested on two synthetic systems with known memory effects, and the pipeline was then
+tested against literature-digitized real data. Synthetic calibration revealed a systematic HODMD bias
+when reconstructing power-law-in-time curves, traced to its forward-simulation step and fixed with a
+denoising-only SSA variant. A further synthetic test found this bias is not shared by two other
+DMD-family methods (Bagging, Optimized DMD and Subspace DMD), while a minimal established
+bias-correction technique applied to HODMD itself (forward-backward averaging) made the bias
+measurably worse, sharpening rather than broadening the original diagnosis. For the real-data test,
+we digitized two published figures from a hyaluronan-collagen composite hydrogel study, tracking
+reported and digitization error separately, and applied a pre-registered criterion for detecting the
+composite network's caging signature. The estimators did not detect a statistically significant local
+slope decrease in the digitized MSD curve within propagated uncertainty, the primary, locked
+criterion, though a secondary check on the intermediate scattering function showed the expected
+qualitative plateau. A follow-up test fit an explicit confined-diffusion model against a global power
+law by AICc; the power law was decisively preferred for the composite network even though the
+confined model's characteristic time was well-constrained within the observed range, a sharper
+negative result. We report this as a mixed result, discuss why the digitized figure's time range
+likely falls short of the plateau region, and describe a digitization methodology independently
+validated against synthetic ground truth with both pre-registered accuracy checks passing well inside
+threshold, making it reusable for extracting quantitative data from published figures.
 
 ## 1. Introduction
 
@@ -69,8 +67,7 @@ the pass/fail criteria fixed before the data was digitized.
 We tested three estimators for the subdiffusive scaling exponent alpha, defined via mean-squared
 displacement (MSD) proportional to Delta t^alpha. `loglog` performs ordinary least-squares
 regression of log(MSD) on log(Delta t). `dmd` applies Higher-Order Dynamic Mode Decomposition
-(HODMD; Le Clainche and Vega, 2017), via the PyDMD implementation (Demo et al., 2018; Ichinaga et
-al., 2024), to a delay-embedded trajectory and recovers alpha from the fitted eigenvalue spectrum
+(HODMD [1]), via the PyDMD implementation [2,3], to a delay-embedded trajectory and recovers alpha from the fitted eigenvalue spectrum
 via forward reconstruction. `ssa` uses the same delay-embedding matrix as `dmd` but replaces
 HODMD's eigenvalue-based forward simulation with Hankel-SVD low-rank projection and anti-diagonal
 averaging (Singular Spectrum Analysis-style denoising), with the exponent then read off the
@@ -78,7 +75,7 @@ denoised curve by log-log fit. All three were implemented in `src/ergofluids/koo
 
 ### 2.2 Mori-Zwanzig memory kernel
 
-We ported the Mori-Zwanzig Mode Decomposition (MZMD) algorithm described by Woodward et al. (2023)
+We ported the Mori-Zwanzig Mode Decomposition (MZMD) algorithm described by Woodward et al. [4]
 from its reference Julia implementation to Python (`src/ergofluids/mz/mzmd.py`). The kernel order
 n_ks controls the number of memory terms retained; n_ks = 1 reduces the method to a memoryless
 (Markovian) fit.
@@ -103,7 +100,7 @@ memory-augmented fits.
 ### 2.4 Real-data acquisition and digitization
 
 No public per-trajectory or raw ensemble dataset exists for the target system. We therefore
-digitized two published figures from Burla et al. (2019, arXiv:1909.05091): Figure 4a (intermediate
+digitized two published figures from Burla et al. [5]: Figure 4a (intermediate
 scattering function, ISF, vs. tq^2, for 0.6 micron tracers in composite, hyaluronan-only, and
 collagen-only networks) and Supplementary Figure S14a (ensemble MSD vs. Delta t for the same
 systems). Figures were rendered from the source PDF at 400 DPI, cropped to the panel region, and
@@ -142,8 +139,8 @@ pre-registered separately (`docs/BUILD_PLAN.md`, "Gate 5") after Gate 4's result
 script was run, we fit two two-parameter models to each curve's full digitized range by weighted
 nonlinear least squares (weights = 1/sigma_i^2, sigma_i the same combined reported/digitization
 error used in Gate 4): a global power law, `MSD(t) = A t^alpha`, and the standard confined-diffusion
-form from the single-particle-tracking literature (Kusumi, Sako & Yamamoto, 1993; restated in later
-methods papers, e.g. Fujiwara et al., 2016), `MSD(t) = P[1 - exp(-t/tau)]`. The two were compared by
+form from the single-particle-tracking literature [6], restated in later methods papers, e.g. [7],
+`MSD(t) = P[1 - exp(-t/tau)]`. The two were compared by
 small-sample-corrected AIC (AICc), propagated through the
 same style of 2000-draw Gaussian-perturbation bootstrap Gate 4 used (fresh seed, not reused from
 Gate 4). The pre-registered pass criterion required, for the composite curve, that the confined
@@ -159,9 +156,8 @@ dynamic reconstruction entirely). As a separate, later-pre-registered follow-up
 (`docs/BUILD_PLAN.md`, "Gate 6"), independent of the real-data gates, we asked whether the bias is
 specific to HODMD or shared by other established DMD-family methods, using three PyDMD-implemented
 candidates chosen for mechanistic diversity: `HODMD(forward_backward=True)` (forward-backward
-operator averaging, Dawson et al., arXiv:1507.02264, applied to the identical HODMD configuration
-Gate 0 tested), `BOPDMD` (Bagging, Optimized DMD; Askham & Kutz, 2018; Sashidhar & Kutz,
-arXiv:2107.10878, 2021), and `SubspaceDMD` (Takeishi, Kawahara & Yairi, 2017). `BOPDMD` and
+operator averaging [8], applied to the identical HODMD configuration
+Gate 0 tested), `BOPDMD` (Bagging, Optimized DMD [9,10]), and `SubspaceDMD` [11]. `BOPDMD` and
 `SubspaceDMD` do not natively delay-embed a scalar signal, so both were fit on the identical
 Hankel-matrix construction `ssa` uses and reassembled to a 1D curve the same way, isolating "which
 reconstruction algorithm is applied to the same delay-embedded matrix" as the only variable against
@@ -305,9 +301,13 @@ range; the confined-diffusion fit systematically deviates, overshooting at short
 undershooting mid-range, and flattening before the data does, the same result Table 3 reports as
 a decisive AICc preference for the power law.](figures/fig1_composite_msd_fits.png)
 
-**Figure 1.** Composite-network MSD: digitized data against both Gate 5 fits, point estimates on
-the unperturbed data (power law alpha = 0.49; confined-diffusion tau = 1.42 s), consistent with
-Table 3's bootstrap means.
+**Fig 1. Composite-network MSD: digitized data against two pre-registered model fits (Gate 5).**
+Digitized composite MSD (blue points; error bars combine reported and digitization error in
+quadrature) against a power law fit (orange, solid) and a confined-diffusion fit (green, dashed).
+The power law tracks the data across the full range; the confined-diffusion fit deviates
+systematically, overshooting at short Delta t, undershooting mid-range, and flattening before the
+data does. Point estimates: power law alpha = 0.49; confinement time tau = 1.42 s. See Table 3 for
+the AICc comparison and bootstrap confidence intervals.
 
 ### 3.6 DMD-generality test (Gate 6)
 
@@ -335,7 +335,11 @@ and ssa are Gate 0b; hodmd_fb, bopdmd, and subspace are Gate 6. hodmd_fb sits be
 every condition, most severely at alpha_true = 0.7; bopdmd and subspace clear it at every
 condition.](figures/fig2_coverage_comparison.png)
 
-**Figure 2.** Coverage comparison across all six tested estimators, Gate 0b and Gate 6 combined.
+**Fig 2. Bootstrap-CI coverage across six subdiffusion-exponent estimators.** Coverage out of 20
+repeats per estimator at three true exponent values, against the 18/20 pass bar (dashed). loglog,
+dmd (HODMD), and ssa are from Gate 0b; hodmd_fb, bopdmd, and subspace are from Gate 6. hodmd_fb
+falls below the bar at every condition, most severely at alpha_true = 0.7; bopdmd and subspace
+clear it at every condition.
 
 ### 3.7 Digitization pipeline accuracy (Gate 7)
 
@@ -492,49 +496,48 @@ documented extraction-bug history.
 
 The author declares no competing interests.
 
-## Data and code availability
+## Data availability
 
-All code, synthetic data generators, digitization scripts, and gate results are available at
-https://github.com/AmunRaPtah/ergofluids. Digitized figure data (`repo/data/digitized/`) and the
-pre-registered gate criteria (`docs/BUILD_PLAN.md`, `repo/scripts/run_gate4.py`,
-`repo/scripts/run_gate5.py`, `repo/scripts/run_gate6.py`, `repo/scripts/run_gate7.py`) are included.
+All data, code, and analysis scripts underlying this study are publicly available in the GitHub
+repository AmunRaPtah/ergofluids (https://github.com/AmunRaPtah/ergofluids), pinned to commit
+a2b8246 for this submission. Digitized figure data are in `repo/data/digitized/`; pre-registered gate
+criteria are in `docs/BUILD_PLAN.md`; gate scripts are in `repo/scripts/` (`run_gate0.py` through
+`run_gate7.py`).
 
 ## References
 
-Askham, T., & Kutz, J. N. (2018). Variable projection methods for an optimized dynamic mode
-decomposition. SIAM Journal on Applied Dynamical Systems, 17(1), 380-416.
+1. Le Clainche S, Vega JM. Higher order dynamic mode decomposition. SIAM J Appl Dyn Syst.
+2017;16(2):882-925.
 
-Burla, F., Sentjabrskaja, T., Pletikapic, G., van Beugen, J., & Koenderink, G. H. (2019). Particle
-diffusion in extracellular hydrogels. arXiv:1909.05091.
+2. Demo N, Tezzele M, Rozza G. PyDMD: Python Dynamic Mode Decomposition. J Open Source Softw.
+2018;3(22):530.
 
-Dawson, S. T. M., Hemati, M. S., Williams, M. O., & Rowley, C. W. (2016). Characterizing and
-correcting for the effect of sensor noise in the dynamic mode decomposition. Experiments in Fluids,
-57(3), 42.
+3. Ichinaga SM, Andreuzzi F, Demo N, Tezzele M, Lapo K, Rozza G, et al. PyDMD: A Python Package for
+Robust Dynamic Mode Decomposition. J Mach Learn Res. 2024;25.
 
-Demo, N., Tezzele, M., & Rozza, G. (2018). PyDMD: Python Dynamic Mode Decomposition. Journal of Open
-Source Software, 3(22), 530.
+4. Woodward M, Lin YT, Tian Y, Hader C, Fasel H, Livescu D. Mori-Zwanzig mode decomposition:
+Comparison with time-delay embeddings. arXiv:2311.09524 [Preprint]. 2023.
 
-Fujiwara, T. K., Iwasawa, K., Kalay, Z., Tsunoyama, T. A., Watanabe, Y., Umemura, Y. M., Murakoshi,
-H., Suzuki, K. G. N., Nemoto, Y. L., Morone, N., & Kusumi, A. (2016). Confined diffusion of
-transmembrane proteins and lipids induced by the same actin meshwork lining the plasma membrane.
-Molecular Biology of the Cell, 27(7), 1101-1119.
+5. Burla F, Sentjabrskaja T, Pletikapic G, van Beugen J, Koenderink GH. Particle diffusion in
+extracellular hydrogels. arXiv:1909.05091 [Preprint]. 2019.
 
-Ichinaga, S. M., Andreuzzi, F., Demo, N., Tezzele, M., Lapo, K., Rozza, G., Brunton, S. L., & Kutz,
-J. N. (2024). PyDMD: A Python Package for Robust Dynamic Mode Decomposition. Journal of Machine
-Learning Research, 25.
+6. Kusumi A, Sako Y, Yamamoto M. Confined lateral diffusion of membrane receptors as studied by
+single particle tracking (nanovid microscopy). Effects of calcium-induced differentiation in
+cultured epithelial cells. Biophys J. 1993;65(5):2021-2040.
 
-Kusumi, A., Sako, Y., & Yamamoto, M. (1993). Confined lateral diffusion of membrane receptors as
-studied by single particle tracking (nanovid microscopy). Effects of calcium-induced differentiation
-in cultured epithelial cells. Biophysical Journal, 65(5), 2021-2040.
+7. Fujiwara TK, Iwasawa K, Kalay Z, Tsunoyama TA, Watanabe Y, Umemura YM, et al. Confined diffusion
+of transmembrane proteins and lipids induced by the same actin meshwork lining the plasma membrane.
+Mol Biol Cell. 2016;27(7):1101-1119.
 
-Le Clainche, S., & Vega, J. M. (2017). Higher order dynamic mode decomposition. SIAM Journal on
-Applied Dynamical Systems, 16(2), 882-925.
+8. Dawson STM, Hemati MS, Williams MO, Rowley CW. Characterizing and correcting for the effect of
+sensor noise in the dynamic mode decomposition. Exp Fluids. 2016;57(3):42.
 
-Sashidhar, D., & Kutz, J. N. (2021). Bagging, optimized dynamic mode decomposition (bop-dmd) for
-robust, stable forecasting with spatial and temporal uncertainty-quantification. arXiv:2107.10878.
+9. Askham T, Kutz JN. Variable projection methods for an optimized dynamic mode decomposition. SIAM
+J Appl Dyn Syst. 2018;17(1):380-416.
 
-Takeishi, N., Kawahara, Y., & Yairi, T. (2017). Subspace dynamic mode decomposition for stochastic
-Koopman analysis. Physical Review E, 96(3), 033310.
+10. Sashidhar D, Kutz JN. Bagging, optimized dynamic mode decomposition (bop-dmd) for robust,
+stable forecasting with spatial and temporal uncertainty-quantification. arXiv:2107.10878
+[Preprint]. 2021.
 
-Woodward, M., Lin, Y. T., Tian, Y., Hader, C., Fasel, H., & Livescu, D. (2023). Mori-Zwanzig mode
-decomposition: Comparison with time-delay embeddings. arXiv:2311.09524.
+11. Takeishi N, Kawahara Y, Yairi T. Subspace dynamic mode decomposition for stochastic Koopman
+analysis. Phys Rev E. 2017;96(3):033310.

@@ -167,6 +167,31 @@ does not and cannot validate whether the two real scripts' hand-read tick-mark p
 themselves correct, since no independent ground truth exists for that step on the real PDF pages.
 Does not touch or reopen any real-data gate or Phase 4.
 
+## Manuscript submission prep (2026-07-31)
+
+Target venue decided: PLOS ONE, direct submission (no arXiv-first preprint step per author
+preference). Confirmed against PLOS ONE's own published criteria pages (fetched, not assumed):
+soundness over novelty/impact, negative and null results explicitly considered, formatting
+requirements (manuscript structure/order, 300-word abstract cap, Vancouver numbered citations,
+TIFF figure specs, double-spacing/continuous line numbers). `docs/manuscript-draft.md` updated
+to match: title page now has a short/running title and an affiliation line (institution + location
+only, no degree/program name per standing instruction, see memory
+`feedback-affiliation-institution-only`), abstract trimmed 376 -> 293 words, all in-text citations
+converted from author-date to numbered `[1]`-`[11]` with a matching Vancouver-style reference list,
+figure captions reformatted to PLOS's "Fig 1."/"Fig 2." label style with merged legend text.
+
+Two build scripts produce the actual submission assets from the markdown source (not hand-maintained
+separately): `repo/scripts/make_manuscript_figures.py` now also writes `docs/figures/Fig1.tif` and
+`Fig2.tif` (RGB, 300 dpi, LZW-compressed, no embedded titles, within PLOS's pixel-width bounds).
+`repo/scripts/build_plos_docx.py` generates `docs/ergofluids_manuscript_PLOS_ONE.docx` via pandoc,
+stripping the source markdown's internal-only "Status" paragraph and embedded figure images (PLOS
+requires figures as separate files), then post-processes with python-docx for double line spacing,
+continuous line numbering, and a page-number footer field.
+
+Data availability statement cites the live GitHub repo pinned to a specific commit SHA, not a
+Zenodo DOI snapshot; the author was told PLOS's own policy language prefers a persistent identifier
+and chose the GitHub-link approach anyway. Revisit if a reviewer flags it.
+
 ## Gotchas
 
 - No raw experimental trajectory data exists publicly for the literature

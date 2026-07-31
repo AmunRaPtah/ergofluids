@@ -5,3 +5,4 @@ matplotlib
 pydmd
 pykoopman
 pytest
+python-docx  # only needed by scripts/build_plos_docx.py; also needs system `pandoc`

@@ -18,6 +18,9 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = ["pytest"]
+# Used only by scripts/build_plos_docx.py, which also needs the system
+# `pandoc` binary (not pip-installable) on PATH.
+submission = ["python-docx"]
 
 [tool.setuptools.packages.find]
 where = ["src"]

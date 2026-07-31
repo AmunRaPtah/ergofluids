@@ -53,6 +53,12 @@ SURFACE = "#fcfcfb"
 plt.rcParams.update(
     {
         "font.family": "sans-serif",
+        # Liberation Sans is a metrically-compatible, freely licensed substitute
+        # for Arial (not installed on this system); PLOS ONE requires Arial,
+        # Times, or Symbol, but since submission figures are raster TIFF (not
+        # vector EPS), no font is actually embedded, so visual equivalence to
+        # Arial is what matters.
+        "font.sans-serif": ["Liberation Sans", "Arial", "DejaVu Sans"],
         "text.color": INK,
         "axes.edgecolor": BASELINE,
         "axes.labelcolor": INK,
@@ -63,6 +69,25 @@ plt.rcParams.update(
         "savefig.facecolor": SURFACE,
     }
 )
+
+PLOS_DPI = 300  # within PLOS ONE's required 300-600 dpi range
+
+
+def save_plos_tiff(fig, out_path, dpi=PLOS_DPI):
+    """Save a TIFF meeting PLOS ONE's figure spec: RGB (no alpha), LZW
+    compression, explicit DPI tag. matplotlib's own TIFF writer can leave an
+    alpha channel from the figure facecolor, so render to an in-memory RGBA
+    buffer first and flatten explicitly."""
+    import io
+
+    from PIL import Image
+
+    buf = io.BytesIO()
+    fig.savefig(buf, format="png", dpi=dpi, bbox_inches="tight")
+    buf.seek(0)
+    im = Image.open(buf).convert("RGB")
+    im.save(out_path, format="TIFF", compression="tiff_lzw", dpi=(dpi, dpi))
+    print(f"wrote {out_path} ({im.width}x{im.height}px at {dpi}dpi, RGB, LZW)")
 
 
 def fig2_coverage_comparison():
@@ -80,7 +105,7 @@ def fig2_coverage_comparison():
     required = 18
     n_repeats = 20
 
-    fig, ax = plt.subplots(figsize=(9, 5), dpi=200)
+    fig, ax = plt.subplots(figsize=(7.4, 4.6), dpi=200)
     n_series = len(series)
     bar_w = 0.8 / n_series
     x = np.arange(len(alphas))
@@ -96,13 +121,17 @@ def fig2_coverage_comparison():
             zorder=3,
         )
         for b, v in zip(bars, coverage):
+            # Vertical text keeps adjacent same-height labels from colliding
+            # horizontally at PLOS's 8pt figure-text floor, where two-digit
+            # horizontal labels on narrow, tightly packed bars would touch.
             ax.text(
                 b.get_x() + b.get_width() / 2,
-                v + 0.4,
+                v + 0.3,
                 str(v),
                 ha="center",
                 va="bottom",
-                fontsize=7.5,
+                rotation=90,
+                fontsize=8,
                 color=INK_SECONDARY,
             )
 
@@ -122,13 +151,8 @@ def fig2_coverage_comparison():
     ax.set_xticklabels([f"alpha_true = {a}" for a in alphas])
     ax.set_ylabel(f"bootstrap-CI coverage (out of {n_repeats})")
     ax.set_ylim(0, n_repeats + 3.5)
-    ax.set_title(
-        "Coverage across six exponent estimators\n"
-        "(loglog/dmd/ssa: Gate 0b; hodmd_fb/bopdmd/subspace: Gate 6)",
-        fontsize=10.5,
-        color=INK,
-        loc="left",
-    )
+    # No embedded title: PLOS ONE figure files carry no title/caption text,
+    # that lives in the manuscript's own figure caption.
     ax.grid(axis="y", color=GRID, linewidth=1, zorder=0)
     ax.set_axisbelow(True)
     for spine in ("top", "right"):
@@ -145,6 +169,7 @@ def fig2_coverage_comparison():
     fig.tight_layout()
     out = FIG_DIR / "fig2_coverage_comparison.png"
     fig.savefig(out, bbox_inches="tight")
+    save_plos_tiff(fig, FIG_DIR / "Fig2.tif")
     plt.close(fig)
     print(f"wrote {out}")
 
@@ -160,7 +185,7 @@ def fig1_composite_msd_fits():
 
     t_smooth = np.logspace(np.log10(t.min()), np.log10(t.max()), 300)
 
-    fig, ax = plt.subplots(figsize=(7, 5.5), dpi=200)
+    fig, ax = plt.subplots(figsize=(6.5, 5.0), dpi=200)
     ax.errorbar(
         t,
         y,
@@ -197,12 +222,8 @@ def fig1_composite_msd_fits():
     ax.set_yscale("log")
     ax.set_xlabel("Delta t (s)")
     ax.set_ylabel("MSD (um^2)")
-    ax.set_title(
-        "Composite network: digitized MSD vs. two pre-registered fits (Gate 5)",
-        fontsize=10.5,
-        color=INK,
-        loc="left",
-    )
+    # No embedded title: PLOS ONE figure files carry no title/caption text,
+    # that lives in the manuscript's own figure caption.
     ax.grid(True, which="both", color=GRID, linewidth=0.7, zorder=0)
     ax.set_axisbelow(True)
     for spine in ("top", "right"):
@@ -212,6 +233,7 @@ def fig1_composite_msd_fits():
     fig.tight_layout()
     out = FIG_DIR / "fig1_composite_msd_fits.png"
     fig.savefig(out, bbox_inches="tight")
+    save_plos_tiff(fig, FIG_DIR / "Fig1.tif")
     plt.close(fig)
     print(f"wrote {out}")
     print(f"point-estimate fit params: power law A={A:.5f} alpha={alpha:.4f}; confined P={P:.5f} tau={tau:.4f}")
