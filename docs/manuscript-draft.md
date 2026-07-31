@@ -1,6 +1,9 @@
 # Diagnosing and testing a Koopman/Mori-Zwanzig subdiffusion estimator: a pre-registered gate sequence from synthetic validation to a literature-digitized real-data test
 
-**Author:** Eniola Olutogun
+**Author:** Eniola Olutogun¹
+
+¹ M.Sc. Digital Health, Hasso Plattner Institute / University of Potsdam. Corresponding author:
+[email address to be filled in].
 
 **Status:** first full draft, 2026-07-23; updated 2026-07-31 to add the Gate 5 model-based refit.
 Target venue not yet selected. All results below are taken directly from
@@ -142,27 +145,47 @@ and, for both pure-component curves, that this same combination not hold.
 ### 3.1 Estimator calibration and the HODMD bias (Gate 0/0b/0c)
 
 At n = 20 repeats per condition, no estimator cleared the pre-registered 18/20 coverage bar at all
-three tested exponents (Table 1): `loglog` reached 18/16/19 (alpha = 0.5/0.7/1.0) and `dmd` reached
-15/17/12. Root-cause analysis attributed `dmd`'s shortfall to a systematic bias (-0.026 to -0.054,
-worst at alpha_true = 1.0) arising because HODMD forward-simulates from its fitted eigenvalue
-decomposition, and a power-law-in-time signal is not a finite sum of exponentials in real time;
-reconstruction error grew 5-10x from the start to the end of the fitting window. Replacing dynamic
-reconstruction with Hankel-SVD denoising only (`ssa`, no forward simulation, same delay embedding)
-reduced this bias; a re-run reached 17/19/18, still missing the bar by one at alpha = 0.5. A
-pre-registered 100-repeat follow-up at that condition found true coverage of 89.0% (95% CI [81.2%,
-94.4%]) for `loglog` and 90.0% (95% CI [82.4%, 95.1%]) for `ssa`, confirming the earlier 17/20 was
-sampling noise rather than genuine miscalibration. Gate 0 passes for `ssa`; `dmd`/HODMD is retired
-from the pipeline.
+three tested exponents in the initial run (Table 1a): `loglog` reached 18/16/19 and `dmd` reached
+15/17/12 (alpha = 0.5/0.7/1.0). Root-cause analysis attributed `dmd`'s shortfall to a systematic bias
+(-0.026 to -0.054, worst at alpha_true = 1.0) arising because HODMD forward-simulates from its
+fitted eigenvalue decomposition, and a power-law-in-time signal is not a finite sum of exponentials
+in real time; reconstruction error grew 5-10x from the start to the end of the fitting window.
+Replacing dynamic reconstruction with Hankel-SVD denoising only (`ssa`, no forward simulation, same
+delay embedding) reduced this bias. `loglog` and `dmd` were re-run alongside the new `ssa` estimator
+in a single combined run (Table 1b); `loglog` and `dmd`'s per-condition counts shift slightly between
+Tables 1a and 1b because a new estimator changes the bootstrap random-number draw order, ordinary
+Monte Carlo variation between two independent 20-repeat runs at a true rate near 90%, not a change in
+either estimator. `ssa` reached 17/19/18 in this re-run, still missing the bar by one at alpha = 0.5.
+A pre-registered 100-repeat follow-up at that condition (Table 1c) found true coverage of 89.0% (95%
+CI [81.2%, 94.4%]) for `loglog` and 90.0% (95% CI [82.4%, 95.1%]) for `ssa`, confirming the earlier
+17/20 was sampling noise rather than genuine miscalibration. Gate 0 passes for `ssa`; `dmd`/HODMD is
+retired from the pipeline.
 
-**Table 1. Gate 0 coverage (n = 20 repeats per condition; alpha_true = 0.5 also re-tested at n =
-100).**
+**Table 1a. Gate 0, initial run (n = 20 repeats per condition, seed 20260722; `ssa` did not exist
+yet).**
+
+| alpha_true | loglog | dmd (HODMD) | required |
+|---|---|---|---|
+| 0.5 | 18/20 | 15/20 | 18/20 |
+| 0.7 | 16/20 | 17/20 | 18/20 |
+| 1.0 | 19/20 | 12/20 | 18/20 |
+
+**Table 1b. Gate 0b, re-run after the SSA fix (n = 20 repeats per condition, all three estimators
+fit together in one run; see note above on why `loglog`/`dmd` counts differ slightly from Table
+1a).**
 
 | alpha_true | loglog | dmd (HODMD) | ssa | required |
 |---|---|---|---|---|
-| 0.5 | 18/20 | 15/20 | 17/20 | 18/20 |
-| 0.7 | 16/20 | 17/20 | 19/20 | 18/20 |
-| 1.0 | 19/20 | 12/20 | 18/20 | 18/20 |
-| 0.5 (n=100 follow-up) | 89/100 (89.0%, CI [81.2, 94.4]) | not tested | 90/100 (90.0%, CI [82.4, 95.1]) | 90% nominal |
+| 0.5 | 18/20 | 17/20 | 17/20 | 18/20 |
+| 0.7 | 19/20 | 18/20 | 19/20 | 18/20 |
+| 1.0 | 19/20 | 13/20 | 18/20 | 18/20 |
+
+**Table 1c. Gate 0c, power follow-up at alpha_true = 0.5 only (n = 100 repeats).**
+
+| estimator | coverage | 95% CI on true rate | 90% target |
+|---|---|---|---|
+| loglog | 89/100 (89.0%) | [81.2%, 94.4%] | inside |
+| ssa | 90/100 (90.0%) | [82.4%, 95.1%] | inside |
 
 ### 3.2 Regime separation (Gate 1)
 
@@ -314,6 +337,11 @@ expected qualitative signature. We report this as an honest mixed result rather 
 validation. With the model-based refit now also run and negative, and author outreach sent but
 unanswered as of this writing, raw trajectory data from the original authors is the one remaining
 concrete path to a sharper test.
+
+## Competing interests
+
+The author declares no competing interests. [Placeholder pending author confirmation: no funding
+source, commercial affiliation, or financial interest is currently on file for this work.]
 
 ## Data and code availability
 
