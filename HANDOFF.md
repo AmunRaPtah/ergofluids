@@ -121,6 +121,30 @@ retested in Phase 3; no per-trajectory real data exists to test it against,
 only the two derived summary curves used above. It remains a synthetic-only
 result (Gate 2, Gate 3).
 
+## Gate 6 (2026-07-31): does HODMD's bias generalize across other DMD-family methods?
+
+`docs/gate-result-gate6-dmd-generality.md`: separate from the real-data gates
+above, a follow-up on Gate 0/0b's HODMD bias diagnosis. Tested three further
+established, published, PyDMD-implemented estimators, chosen for mechanistic
+diversity, against the same synthetic protocol Gate 0 used (fBm trajectories,
+alpha_true in {0.5, 0.7, 1.0}, 18/20 coverage bar), pre-registered in
+`docs/BUILD_PLAN.md` ("Gate 6") before running:
+`HODMD(forward_backward=True)` (`hodmd_fb`), `BOPDMD` (`bopdmd`),
+`SubspaceDMD` (`subspace`). **Result: `hodmd_fb` FAILS decisively at all three
+conditions (15/20, 12/20, 15/20) with bias larger than plain HODMD's
+diagnosed bias, i.e. forward-backward averaging makes the original problem
+worse, not better. `bopdmd` and `subspace` both PASS cleanly at all three
+conditions**, with near-zero bias. Zero `loglog`-fallback triggers across all
+27,180 estimator calls for any candidate. This sharpens rather than simply
+broadens the Gate 0/0b diagnosis: the bias isn't fixed by a minimal
+bias-correction patch to HODMD's own estimation procedure (aimed at a
+different problem, sensor-noise bias, than the one diagnosed here), but is
+avoided by two mechanistically different established methods that don't
+reuse HODMD's own forward-simulation route. Strengthens
+`docs/publication-angle.md`'s claim that the HODMD diagnosis is the
+project's most broadly useful finding. Does not touch or reopen any real-data
+gate or Phase 4.
+
 Alpha=0.7 and alpha=1.0 for `ssa` (Gate 0) were only tested at n=20 (19/20,
 18/20). If either becomes load-bearing for a future claim, run the same
 100-repeat check used for alpha=0.5 before trusting it.

@@ -4,12 +4,12 @@
 
 Corresponding author: ennyolutogun@gmail.com
 
-**Status:** first full draft, 2026-07-23; updated 2026-07-31 to add the Gate 5 model-based refit.
-Target venue not yet selected. All results below are taken directly from
-`docs/gate-result-phase1-synthetic.md`, `docs/gate-result-phase2-mzmd.md`,
-`docs/gate-result-phase2-gate3-caging.md`, `docs/gate-result-phase3-realdata.md`, and
-`docs/gate-result-phase3-gate5-cagedfit.md`; nothing here should be edited without also updating
-(or checking against) those source documents.
+**Status:** first full draft, 2026-07-23; updated 2026-07-31 to add the Gate 5 model-based refit and
+the Gate 6 DMD-generality test. Target venue not yet selected. All results below are taken directly
+from `docs/gate-result-phase1-synthetic.md`, `docs/gate-result-phase2-mzmd.md`,
+`docs/gate-result-phase2-gate3-caging.md`, `docs/gate-result-phase3-realdata.md`,
+`docs/gate-result-phase3-gate5-cagedfit.md`, and `docs/gate-result-gate6-dmd-generality.md`; nothing
+here should be edited without also updating (or checking against) those source documents.
 
 ## Abstract
 
@@ -22,7 +22,12 @@ linear hidden-variable system and a caged-particle system, and a final test agai
 literature-digitized real data. During synthetic calibration we diagnosed a systematic bias in
 HODMD when reconstructing power-law-in-time curves, traced it to HODMD's forward-simulation step,
 and fixed it with a denoising-only SSA variant; a pre-registered 100-repeat follow-up confirmed the
-fix closed the gap. For the real-data test, we digitized Figure 4a and Supplementary Figure S14a
+fix closed the gap. A further pre-registered synthetic test asked whether this bias generalizes to
+other established DMD-family methods: a minimal, established bias-correction technique
+(forward-backward operator averaging) applied to the same HODMD configuration did not fix the bias
+and made it measurably worse, while two mechanistically different established methods (Bagging,
+Optimized DMD and Subspace DMD) both avoided it cleanly, sharpening the diagnosis rather than simply
+broadening it. For the real-data test, we digitized Figure 4a and Supplementary Figure S14a
 from Burla et al. (2019), tracking reported and digitization error separately, and applied a
 pre-registered pass/fail criterion for detecting the caging signature of a hyaluronan-collagen
 composite network. The estimators did not detect a statistically significant local slope decrease
@@ -130,14 +135,33 @@ pre-registered separately (`docs/BUILD_PLAN.md`, "Gate 5") after Gate 4's result
 script was run, we fit two two-parameter models to each curve's full digitized range by weighted
 nonlinear least squares (weights = 1/sigma_i^2, sigma_i the same combined reported/digitization
 error used in Gate 4): a global power law, `MSD(t) = A t^alpha`, and the standard confined-diffusion
-form from the single-particle-tracking literature (Kusumi et al., 1993), `MSD(t) = P[1 -
-exp(-t/tau)]`. The two were compared by small-sample-corrected AIC (AICc), propagated through the
+form from the single-particle-tracking literature (Kusumi, Sako & Yamamoto, 1993; restated in later
+methods papers, e.g. Fujiwara et al., 2016), `MSD(t) = P[1 - exp(-t/tau)]`. The two were compared by
+small-sample-corrected AIC (AICc), propagated through the
 same style of 2000-draw Gaussian-perturbation bootstrap Gate 4 used (fresh seed, not reused from
 Gate 4). The pre-registered pass criterion required, for the composite curve, that the confined
 model be preferred (95% CI of `delta_AICc = AICc_powerlaw - AICc_confined` entirely positive) with
 `tau` constrained inside the observed Delta t range (95% CI lower bound below the curve's maximum
 digitized Delta t, ruling out a pass driven by an unconstrained, effectively-extrapolated plateau);
 and, for both pure-component curves, that this same combination not hold.
+
+### 2.7 DMD-generality test protocol (Gate 6, pre-registered)
+
+Gate 0/0b diagnosed HODMD's bias but tested only one fix (`ssa`, which abandons eigenvalue-based
+dynamic reconstruction entirely). As a separate, later-pre-registered follow-up
+(`docs/BUILD_PLAN.md`, "Gate 6"), independent of the real-data gates, we asked whether the bias is
+specific to HODMD or shared by other established DMD-family methods, using three PyDMD-implemented
+candidates chosen for mechanistic diversity: `HODMD(forward_backward=True)` (forward-backward
+operator averaging, Dawson et al., arXiv:1507.02264, applied to the identical HODMD configuration
+Gate 0 tested), `BOPDMD` (Bagging, Optimized DMD; Askham & Kutz, 2018; Sashidhar & Kutz,
+arXiv:2107.10878, 2021), and `SubspaceDMD` (Takeishi, Kawahara & Yairi, 2017). `BOPDMD` and
+`SubspaceDMD` do not natively delay-embed a scalar signal, so both were fit on the identical
+Hankel-matrix construction `ssa` uses and reassembled to a 1D curve the same way, isolating "which
+reconstruction algorithm is applied to the same delay-embedded matrix" as the only variable against
+`ssa`. Protocol otherwise identical to Gate 0: fBm trajectories, `alpha_true` in {0.5, 0.7, 1.0}, 20
+repeats per condition, 150-resample bootstrap CI, 18/20 coverage bar. Each estimator falls back to
+`loglog_fit_exponent` on any fit exception or non-finite reconstruction, with fallback counts
+tracked and reported per condition rather than absorbed silently.
 
 ## 3. Results
 
@@ -245,6 +269,26 @@ curve).**
 | hyaluronan | 1.071 | -557.752 [-621.878, -494.394] | 0.136 [0.107, 0.171] | (B) PASS |
 | collagen (1 mg/mL) | 1.062 | -320.114 [-376.011, -263.517] | 0.300 [0.265, 0.335] | (B) PASS |
 
+### 3.6 DMD-generality test (Gate 6)
+
+`hodmd_fb` failed at all three conditions (Table 4); `bopdmd` and `subspace` both passed cleanly at
+all three. Zero `loglog`-fallback triggers occurred across 27,180 total estimator calls for any
+candidate. `hodmd_fb`'s mean bias (-0.064 to -0.101) is larger in magnitude than plain HODMD's
+diagnosed bias (-0.026 to -0.054, Section 3.1), and its coverage at alpha_true = 0.7 (12/20) is
+worse than plain HODMD scored at the same condition in either of its two Gate 0 runs (17/20 and
+18/20): forward-backward operator averaging did not fix HODMD's bias, and measurably worsened it.
+`bopdmd` and `subspace` both avoided the bias, with mean bias close to zero (`bopdmd`) or small and
+growing but still inside calibrated coverage (`subspace`).
+
+**Table 4. Gate 6 coverage and mean point-estimate bias (n = 20 repeats per condition; required
+18/20).**
+
+| alpha_true | hodmd_fb coverage | hodmd_fb bias | bopdmd coverage | bopdmd bias | subspace coverage | subspace bias |
+|---|---|---|---|---|---|---|
+| 0.5 | 15/20 | -0.0644 | 18/20 | -0.0154 | 20/20 | +0.0055 |
+| 0.7 | 12/20 | -0.0994 | 20/20 | -0.0067 | 20/20 | +0.0367 |
+| 1.0 | 15/20 | -0.1013 | 20/20 | -0.0019 | 19/20 | +0.0818 |
+
 ## 4. Discussion
 
 The two halves of this study point in different directions on the same question, and we report both
@@ -298,7 +342,31 @@ the most broadly useful finding here: HODMD's eigenvalue-based forward reconstru
 systematic, growing bias when applied to power-law-in-time signals, because such signals are not a
 finite sum of exponentials in real time. This is a specific, mechanistic, falsifiable failure mode
 for a widely used DMD variant, and the fix (denoising-only reconstruction via the same delay
-embedding) is simple enough to adopt directly. The digitization methodology, tick-calibrated pixel
+embedding) is simple enough to adopt directly.
+
+Gate 6 sharpens this finding rather than merely broadening it. A minimal, established
+bias-correction technique, forward-backward operator averaging, applied to the exact same HODMD
+configuration, did not fix the bias and made it measurably worse: coverage at alpha_true = 0.7 fell
+to 12/20 from HODMD's own 17-18/20 in its two prior runs, and mean bias grew in magnitude beyond
+HODMD's own. Two mechanistically different established methods, BOPDMD (variable-projection
+optimized fitting with bootstrap aggregation) and SubspaceDMD (subspace-identification-based
+estimation), both avoided the bias cleanly. The pattern is informative precisely because it does not
+split along a simple "eigenvalue methods fail, others succeed" line: `hodmd_fb` is still
+eigenvalue-based and failed; `bopdmd` is also eigenvalue-based, via a different fitting route, and
+passed. The more specific reading is that forward-backward averaging targets a different problem,
+correcting eigenvalue bias from sensor or measurement noise in the original DMD estimation procedure
+(the problem it was developed for), not the structural mismatch diagnosed here, forward-simulating a
+fitted eigenvalue decomposition on a signal that is not a finite sum of real-time exponentials. The
+two methods that did avoid the bias both estimate their eigenvalue decomposition through a route
+that does not reuse HODMD's own two-stage delay-embed-then-forward-simulate procedure: BOPDMD by
+directly optimizing against the whole reconstruction window (variable projection) rather than a
+linear regression followed by forward propagation, and SubspaceDMD through subspace identification,
+a different theoretical foundation entirely. `ssa`'s original fix (denoising only, no dynamic
+reconstruction at all) is therefore not the only way to avoid HODMD's bias, but the two other things
+that do avoid it also do not rely on HODMD's own specific estimation route, consistent with, not
+incidental to, the original diagnosis.
+
+The digitization methodology, tick-calibrated pixel
 extraction with two independently tracked error sources, and three documented, caught-and-fixed
 contamination bugs, is offered as a reusable procedure for anyone needing to extract quantitative
 data from published figures where raw data is unavailable, independent of what this particular
@@ -319,20 +387,29 @@ same target, an explicit caged-diffusion functional-form fit rather than two-win
 (Gate 5, Section 3.5), pre-registered separately to avoid retroactively building a criterion around
 this dataset's specific outcome; it also did not detect the target signature, more decisively than
 the first test. With that avenue closed on the existing digitized data, raw trajectory data from the
-original authors is the only remaining concrete path to a sharper real-data test.
+original authors is the only remaining concrete path to a sharper real-data test. Separately, Gate 6
+tested only three DMD-family methods, chosen for mechanistic diversity, not an exhaustive survey of
+PyDMD's implemented variants; other variants (for example plain `OptDMD`, `FbDMD` without HODMD's
+delay embedding, or `PiDMD` under various structural constraints) remain untested and are not
+claimed to behave either way.
 
 ## 6. Conclusion
 
 We report a pre-registered, mixed-outcome test of Koopman/Mori-Zwanzig-based subdiffusion estimators
-against literature-digitized real data, followed by a second pre-registered test using a genuinely
-different statistic. The estimator pipeline and memory-kernel extension are internally validated on
-synthetic data, including a diagnosed and fixed bias in a commonly used DMD variant; neither
-real-data test confirmed the target caging signature on its primary, locked criterion (a local
-two-window slope comparison, and a whole-curve confined-diffusion model fit compared by AICc),
+against literature-digitized real data, followed by two further pre-registered tests: a second
+real-data test using a genuinely different statistic, and a synthetic-only generality test of the
+original HODMD bias diagnosis. The estimator pipeline and memory-kernel extension are internally
+validated on synthetic data, including a diagnosed and fixed bias in a commonly used DMD variant;
+neither real-data test confirmed the target caging signature on its primary, locked criterion (a
+local two-window slope comparison, and a whole-curve confined-diffusion model fit compared by AICc),
 though a secondary descriptive check on an independent panel of the same figure did show the
 expected qualitative signature. We report this as an honest mixed result rather than reframe it as a
 validation. With the model-based refit now also run and negative, raw trajectory data from the
-original authors is the one remaining concrete path to a sharper test.
+original authors is the one remaining concrete path to a sharper real-data test. Separately, the
+HODMD bias diagnosis itself was strengthened: a minimal, established bias-correction technique
+applied to HODMD's own procedure did not fix the bias and made it worse, while two mechanistically
+different established methods avoided it cleanly, a more specific and more generalizable finding
+than the original diagnosis alone supported.
 
 ## Competing interests
 
@@ -343,12 +420,19 @@ The author declares no competing interests.
 All code, synthetic data generators, digitization scripts, and gate results are available at
 https://github.com/AmunRaPtah/ergofluids. Digitized figure data (`repo/data/digitized/`) and the
 pre-registered gate criteria (`docs/BUILD_PLAN.md`, `repo/scripts/run_gate4.py`,
-`repo/scripts/run_gate5.py`) are included.
+`repo/scripts/run_gate5.py`, `repo/scripts/run_gate6.py`) are included.
 
 ## References
 
+Askham, T., & Kutz, J. N. (2018). Variable projection methods for an optimized dynamic mode
+decomposition. SIAM Journal on Applied Dynamical Systems, 17(1), 380-416.
+
 Burla, F., Sentjabrskaja, T., Pletikapic, G., van Beugen, J., & Koenderink, G. H. (2019). Particle
 diffusion in extracellular hydrogels. arXiv:1909.05091.
+
+Dawson, S. T. M., Hemati, M. S., Williams, M. O., & Rowley, C. W. (2016). Characterizing and
+correcting for the effect of sensor noise in the dynamic mode decomposition. Experiments in Fluids,
+57(3), 42.
 
 Demo, N., Tezzele, M., & Rozza, G. (2018). PyDMD: Python Dynamic Mode Decomposition. Journal of Open
 Source Software, 3(22), 530.
@@ -368,6 +452,12 @@ in cultured epithelial cells. Biophysical Journal, 65(5), 2021-2040.
 
 Le Clainche, S., & Vega, J. M. (2017). Higher order dynamic mode decomposition. SIAM Journal on
 Applied Dynamical Systems, 16(2), 882-925.
+
+Sashidhar, D., & Kutz, J. N. (2021). Bagging, optimized dynamic mode decomposition (bop-dmd) for
+robust, stable forecasting with spatial and temporal uncertainty-quantification. arXiv:2107.10878.
+
+Takeishi, N., Kawahara, Y., & Yairi, T. (2017). Subspace dynamic mode decomposition for stochastic
+Koopman analysis. Physical Review E, 96(3), 033310.
 
 Woodward, M., Lin, Y. T., Tian, Y., Hader, C., Fasel, H., & Livescu, D. (2023). Mori-Zwanzig mode
 decomposition: Comparison with time-delay embeddings. arXiv:2311.09524.

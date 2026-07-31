@@ -312,6 +312,131 @@ follow-up, since it was tried and did not find a caging signature either, this t
 rather than ambiguous result. Per `BUILD_PLAN.md`'s phase sequencing rule, Phase 4 (IP/venture
 material) still does not open on this result.
 
+## Gate 6: does HODMD's bias generalize across other established DMD-family methods?
+
+**Pre-registered here, before this gate's script is run.** Gate 0/0b diagnosed a systematic bias in
+HODMD (the project's original `dmd` estimator) when reconstructing power-law-in-time MSD curves,
+attributed to HODMD's eigenvalue-based forward simulation compounding error for a signal that is
+not a finite sum of real-time exponentials. The fix used (`ssa`) abandons eigenvalue-based
+reconstruction entirely in favor of denoising-only projection. This leaves open whether the failure
+is specific to HODMD's own implementation, or a general property shared by other established
+DMD-family methods, published elsewhere, not built for this project, that also aim to correct
+estimation bias by other means. Testing this generalizes the diagnosis from "one class had a bug we
+found and fixed" to "here is which established methods in this family share the failure mode and
+which don't."
+
+**Candidates, chosen for mechanistic diversity, all implemented in PyDMD (installed version
+2025.8.1) and published elsewhere:**
+
+1. `HODMD(forward_backward=True)`: adds forward-backward operator averaging (Dawson, Hemati,
+   Williams & Rowley, arXiv:1507.02264) to the exact same HODMD configuration Gate 0 already tested
+   (`d=10, svd_rank=6, opt=True`), isolating whether this specific, minimal, established
+   bias-correction technique fixes HODMD's diagnosed problem while keeping eigenvalue-based dynamic
+   reconstruction, unlike `ssa`, which abandons it.
+2. `BOPDMD` (Bagging, Optimized DMD; Askham & Kutz, *SIAM J. Appl. Dyn. Syst.* 17, 2018, variable
+   projection; Sashidhar & Kutz, arXiv:2107.10878, 2021, bagging): variable-projection optimized
+   fitting plus bootstrap-aggregated ensembling across sub-samples of snapshots, a modern, actively
+   recommended noise/uncertainty-robust variant, mechanistically distinct from HODMD (statistical
+   ensembling, not a single deterministic fit).
+3. `SubspaceDMD` (Takeishi, Kawahara & Yairi, *Phys. Rev. E* 96, 033310, 2017): a
+   subspace-identification-based estimator, a different theoretical foundation from regression-based
+   DMD entirely, chosen for maximum mechanistic diversity from HODMD and BOPDMD.
+
+**Method.** `BOPDMD` and `SubspaceDMD` do not natively delay-embed a scalar signal, so both are fit
+on the identical Hankel-matrix construction `ssa_denoise_exponent` already uses (window=20 rows,
+rank=4), reconstructed via each method's own `reconstructed_data`, and reassembled to a 1D curve by
+the same anti-diagonal averaging `ssa` uses, isolating "which reconstruction algorithm is applied to
+the same delay-embedded matrix" as the only variable against `ssa`. `HODMD(forward_backward=True)`
+keeps HODMD's own native delay embedding (`d=10`) unchanged from the original `dmd` estimator,
+isolating forward-backward averaging as the only variable against `dmd`. In all three cases the
+exponent is read off the reconstructed curve by the same log-log OLS fit used throughout this
+pipeline.
+
+**Protocol**, identical to Gate 0 in every other respect: `generate_2d_trajectories` (150 particles,
+80 steps, 2D fractional Brownian motion), `alpha_true` in {0.5, 0.7, 1.0}, 20 independent
+realizations per condition, 150-resample percentile bootstrap CI per realization
+(`validation/gate.py`), pass bar 18/20 coverage at nominal 90%. Seed 20260731 (the date this gate is
+run; distinct from Gate 0's own 20260722 run, since this is a separately pre-registered, later-run
+gate on its own independent random-number stream).
+
+**Pass criterion**: same as Gate 0, applied independently to each of the three new estimators:
+coverage >= 18/20 at all three tested `alpha_true` values. If any candidate lands at exactly 17/20
+at a single condition, the same power-follow-up discipline used for Gate 0c (100-repeat Clopper-Pearson
+re-test) applies before that candidate is called failed or passed.
+
+**Secondary, descriptive report, not part of pass/fail**: mean point-estimate bias (point estimate
+minus `alpha_true`) per candidate per condition, reported alongside coverage, mirroring how Gate 0's
+own root-cause table separated interval coverage from point-estimate bias.
+
+**What a pass or fail means here, stated before running.** A pass for any candidate would show
+HODMD's specific bias is avoidable by an established bias-correction technique without giving up
+eigenvalue-based reconstruction, or that a fundamentally different DMD-family method sidesteps the
+problem altogether, either would broaden the diagnosis's generality beyond `ssa` being the only fix
+found. A fail for all three would strengthen the mechanistic account: that forward-simulating a
+fitted eigenvalue decomposition on a non-exponential-in-time real signal is a structural mismatch
+that ordinary bias-correction techniques (averaging, optimized fitting, bagging, subspace
+estimation) do not fix, regardless of which established method applies them, and that `ssa`'s move
+(denoising only, no forward simulation) addresses the actual structural cause rather than being an
+incidental fix. Both outcomes are reported as obtained; the informative content is in which methods
+share the failure mode and which don't, not in getting a specific answer.
+
+**Numerical note, stated before running**: `BOPDMD` occasionally emits a "failed to converge"
+warning during variable-projection fitting on this data (observed in pre-registration smoke testing;
+no exceptions or non-finite output across 40 stress-test trials including bootstrap resampling, so
+this is expected optimizer behavior, not a sign the estimator function itself is broken). Estimator
+functions catch any fit exception and fall back to `loglog_fit_exponent` on that specific draw;
+fallback counts are reported per condition, not silently absorbed into the coverage count.
+
+No parameter or criterion changes after seeing the numbers below.
+
+### Gate 6 result
+
+Run 2026-07-31, `repo/scripts/run_gate6.py`, seed 20260731. Full detail and discussion in
+`docs/gate-result-gate6-dmd-generality.md`; summary:
+
+| alpha_true | hodmd_fb coverage | hodmd_fb bias | bopdmd coverage | bopdmd bias | subspace coverage | subspace bias |
+|---|---|---|---|---|---|---|
+| 0.5 | 15/20 | -0.0644 | 18/20 | -0.0154 | 20/20 | +0.0055 |
+| 0.7 | 12/20 | -0.0994 | 20/20 | -0.0067 | 20/20 | +0.0367 |
+| 1.0 | 15/20 | -0.1013 | 20/20 | -0.0019 | 19/20 | +0.0818 |
+
+Required: 18/20 at every `alpha_true`. Zero `loglog`-fallback triggers across all 27,180 estimator
+calls (3 candidates x 3 conditions x 3,020 calls each) for any candidate; the numerical note's
+concern did not materialize in practice.
+
+**Verdict: `hodmd_fb` FAILS, `bopdmd` and `subspace` both PASS.** No candidate landed at exactly
+17/20 at any condition, so the pre-registered power-follow-up trigger (Gate 0c-style 100-repeat
+re-test) does not apply to any of the three.
+
+`hodmd_fb`'s bias (-0.064 to -0.101) is larger in magnitude than the original `dmd` (plain HODMD)
+bias Gate 0/0b diagnosed (-0.026 to -0.054), and its coverage at `alpha_true=0.7` (12/20) is worse
+than plain `dmd` scored at the same condition in either of its two runs (17/20 in Gate 0, 18/20 in
+Gate 0b). Forward-backward operator averaging (Dawson et al., arXiv:1507.02264), an established,
+minimal bias-correction technique applied to the exact same HODMD configuration, does not fix
+HODMD's diagnosed bias and makes it measurably worse on this data, not better.
+
+`bopdmd` and `subspace` both clear the bar cleanly, with small, near-zero mean bias (bopdmd: -0.015
+to -0.002; subspace: +0.006 to +0.082, growing with `alpha_true` but still inside calibrated
+coverage). Two mechanistically different, established DMD-family methods, variable-projection
+optimized fitting with bootstrap aggregation (BOPDMD), and subspace-identification-based estimation
+(SubspaceDMD), both applied to the identical Hankel-embedded curve `ssa` uses, avoid HODMD's
+diagnosed bias.
+
+Per the pre-registered interpretation: this result does not simply generalize HODMD's bias to "the
+whole DMD family," nor does it show "any bias-correction fixes it." It sharpens the mechanistic
+account: forward-backward averaging, a technique aimed at sensor-noise-induced eigenvalue bias in
+the *original* HODMD estimation procedure, does not address the specific structural mismatch
+diagnosed here (forward-simulating a fitted eigenvalue decomposition on a signal that is not a
+finite sum of real-time exponentials); switching to a genuinely different fitting algorithm,
+whether by directly optimizing the eigenvalue decomposition against the whole window (BOPDMD) or by
+estimating dynamics through subspace identification instead of forward-simulated regression
+(SubspaceDMD), avoids the problem. `ssa`'s original fix (denoising only, no dynamic reconstruction
+at all) is not the only way to avoid this bias, but the two other things that do avoid it also do
+not rely on HODMD's own two-stage delay-embed-then-forward-simulate procedure.
+
+This does not change Phase sequencing or reopen Phase 4; Gate 6 is a further generalization test of
+the Gate 0/0b diagnosis, independent of the real-data gates (4, 5).
+
 ## Phase sequencing
 
 1. **Phase 1 (this pass, complete)**: Gate 0 (failed for `dmd`, passed for `ssa` after diagnosis
