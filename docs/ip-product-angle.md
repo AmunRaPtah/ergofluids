@@ -1,7 +1,9 @@
 # IP / product angle
 
-Date: 2026-07-23. Written after Gate 4 (`docs/gate-result-phase3-realdata.md`) returned its result:
-fail on the pre-registered primary criterion, pass on a secondary descriptive check.
+Date: 2026-07-23, updated 2026-07-31 after Gate 5. Written after Gate 4
+(`docs/gate-result-phase3-realdata.md`) returned its result: fail on the pre-registered primary
+criterion, pass on a secondary descriptive check. Gate 5
+(`docs/gate-result-phase3-gate5-cagedfit.md`), a model-based follow-up run 2026-07-31, also failed.
 
 ## Bottom line
 
@@ -27,11 +29,17 @@ here is a green light to draft IP or funding material yet.
 
 ## What would need to be true first
 
-- A real-data gate (a redesigned Gate 4, or a fresh gate) passing on its own pre-registered primary
-  criterion, not only a secondary descriptive check. `gate-result-phase3-realdata.md` names two
-  concrete paths to that: raw trajectory data from the arXiv:1909.05091 authors, or a model-based
-  test (an explicit caged-diffusion functional form) that might detect the plateau earlier in the
-  digitized figure's accessible range.
+- A real-data gate passing on its own pre-registered primary criterion, not only a secondary
+  descriptive check. `gate-result-phase3-realdata.md` named two concrete paths to that: raw
+  trajectory data from the arXiv:1909.05091 authors, or a model-based test (an explicit
+  caged-diffusion functional form) that might detect the plateau earlier in the digitized figure's
+  accessible range. The second has since been run as Gate 5
+  (`docs/gate-result-phase3-gate5-cagedfit.md`) and also failed, more decisively than Gate 4; a
+  well-constrained confined-diffusion fit still lost to a plain power law by 70-149 AICc points for
+  the composite curve. Author outreach (`docs/author-outreach-draft.md`) was sent and remains
+  unanswered as of 2026-07-31. Raw trajectory data is now the only remaining concrete path to a
+  passing real-data gate; nothing further can be extracted from the existing digitized summary
+  curves by changing the statistical test applied to them.
 - Separately, and still entirely untested: the Mori-Zwanzig memory kernel has never been evaluated
   against any real data. Digitized ensemble curves cannot supply the per-trajectory time series
   `fit_mzmd` requires (`repo/src/ergofluids/mz/mzmd.py`); only raw trajectory data would make that

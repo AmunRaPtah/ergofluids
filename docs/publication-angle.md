@@ -1,8 +1,11 @@
 # Publication angle
 
-Date: 2026-07-23. Written after Gate 4 (`docs/gate-result-phase3-realdata.md`) returned its result:
-fail on the pre-registered primary criterion, pass on a secondary descriptive check. Everything
-below is framed against that actual outcome, not against a hoped-for one.
+Date: 2026-07-23, updated 2026-07-31 after Gate 5. Written after Gate 4
+(`docs/gate-result-phase3-realdata.md`) returned its result: fail on the pre-registered primary
+criterion, pass on a secondary descriptive check. Everything below is framed against that actual
+outcome, not against a hoped-for one. Gate 5 (`docs/gate-result-phase3-gate5-cagedfit.md`), a
+model-based follow-up test run 2026-07-31, also failed; see "Next steps" below for what that
+changes.
 
 ## Bottom line
 
@@ -21,14 +24,16 @@ tissue-like data" story, because Gate 4 did not show that on its primary, locked
    subdiffusive curves and what fixes it. It stands on its own as a short methods note, independent
    of what Gate 4 found.
 
-2. **The full pre-registered gate sequence (0 through 4) as a case study.** A Koopman/SSA exponent
+2. **The full pre-registered gate sequence (0 through 5) as a case study.** A Koopman/SSA exponent
    estimator plus a Mori-Zwanzig memory-kernel extension, validated stepwise on synthetic data
-   (Gates 0-3, all passed), then tested against literature-digitized real data (Gate 4, failed on
-   its primary criterion, passed a secondary descriptive check). Worth writing up precisely because
-   it is not a clean win: it shows what synthetic validation does and does not guarantee once real
-   (if indirect) data enters, and documents a specific failure mode, a short digitized Delta t range
-   that captures the front part of a subdiffusive stretch but not the local flattening into a
-   plateau, rather than treating "gate failed" as a dead end to bury.
+   (Gates 0-3, all passed), then tested against literature-digitized real data two independent ways
+   (Gate 4, a fixed-window local-slope comparison, failed on its primary criterion but passed a
+   secondary descriptive check; Gate 5, a whole-curve nonlinear model comparison, failed more
+   decisively). Worth writing up precisely because it is not a clean win: it shows what synthetic
+   validation does and does not guarantee once real (if indirect) data enters, and documents a
+   specific, reproduced-two-ways failure mode, a short digitized Delta t range that captures the
+   front part of a subdiffusive stretch but not the local flattening into a plateau, rather than
+   treating "gate failed" as a dead end to bury.
 
 3. **The digitization methodology itself.** Programmatic, color-segmented, tick-calibrated
    extraction with two separately tracked error sources (reported/paper error bars vs.
@@ -50,15 +55,20 @@ tissue-like data" story, because Gate 4 did not show that on its primary, locked
 
 ## Next steps, if pursuing publication
 
-- Contact the arXiv:1909.05091 authors for raw trajectory data (the long-standing Phase 3 option
-  that has not been attempted). Raw data would let the local-slope test probe further into the
-  Delta t range where the plateau should actually appear, and would be the only way to test the
-  memory kernel against anything real.
-- Alternatively, as `gate-result-phase3-realdata.md` itself notes, a model-based test (fitting an
-  explicit caged-diffusion functional form rather than comparing two-window OLS slopes) might detect
-  the plateau earlier in the accessible range. This was deliberately not attempted post hoc, to
-  avoid building a criterion around this specific dataset's outcome; it would need its own
-  pre-registration before being run.
-- Either path is required before any stronger claim than "the estimator pipeline and the
-  digitization methodology both work as designed; the specific real-data test attempted here did
-  not confirm the target signature within its primary criterion" is warranted.
+- Author outreach for raw trajectory data was sent (`docs/author-outreach-draft.md`) and has not
+  received a response as of 2026-07-31. Raw data remains the only way to probe further into the
+  Delta t range where a plateau might actually appear, or to test the memory kernel against
+  anything real; this path is not closed, just not yet productive.
+- The model-based alternative named in the paragraph above has since been run: Gate 5
+  (`docs/gate-result-phase3-gate5-cagedfit.md`), pre-registered in `docs/BUILD_PLAN.md` before
+  running, fit an explicit confined-diffusion functional form against a global power law on the
+  same digitized curves. It also failed, more decisively than Gate 4, a well-constrained
+  confined-diffusion fit still lost to the power-law null by 70-149 AICc points for the composite
+  curve. This closes the "a different functional form might catch it" question; two independent
+  statistical approaches on the existing digitized data now agree there is no detectable
+  within-range MSD flattening.
+- With both named follow-ups now attempted, raw trajectory data from the original authors is the
+  only remaining path to a sharper test. Until (or unless) that arrives, "the estimator pipeline
+  and the digitization methodology both work as designed; two independent real-data tests attempted
+  here did not confirm the target signature within their primary criteria" is the warranted claim,
+  not a stronger one.

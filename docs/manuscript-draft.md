@@ -2,10 +2,12 @@
 
 **Author:** Eniola Olutogun
 
-**Status:** first full draft, 2026-07-23. Target venue not yet selected. All results below are
-taken directly from `docs/gate-result-phase1-synthetic.md`, `docs/gate-result-phase2-mzmd.md`,
-`docs/gate-result-phase2-gate3-caging.md`, and `docs/gate-result-phase3-realdata.md`; nothing here
-should be edited without also updating (or checking against) those source documents.
+**Status:** first full draft, 2026-07-23; updated 2026-07-31 to add the Gate 5 model-based refit.
+Target venue not yet selected. All results below are taken directly from
+`docs/gate-result-phase1-synthetic.md`, `docs/gate-result-phase2-mzmd.md`,
+`docs/gate-result-phase2-gate3-caging.md`, `docs/gate-result-phase3-realdata.md`, and
+`docs/gate-result-phase3-gate5-cagedfit.md`; nothing here should be edited without also updating
+(or checking against) those source documents.
 
 ## Abstract
 
@@ -24,9 +26,13 @@ pre-registered pass/fail criterion for detecting the caging signature of a hyalu
 composite network. The estimators did not detect a statistically significant local slope decrease
 in the digitized MSD curve within propagated uncertainty (the primary, locked criterion), though a
 secondary descriptive check on the intermediate scattering function did show the expected
-qualitative plateau. We report this as a mixed result rather than a validation, and discuss why the
-digitized figure's time range likely falls short of the plateau region, alongside a digitization
-methodology that we believe is independently reusable.
+qualitative plateau. A follow-up pre-registered test fit an explicit confined-diffusion functional
+form to the same curve and compared it against a global power law by AICc; the power-law model was
+decisively preferred for the composite network even though the confined model's characteristic time
+was well-constrained within the observed range, a sharper negative result than the first test. We
+report this as a mixed result rather than a validation, and discuss why the digitized figure's time
+range likely falls short of the plateau region, alongside a digitization methodology that we believe
+is independently reusable.
 
 ## 1. Introduction
 
@@ -114,6 +120,23 @@ result was computed:
 A secondary, non-pass/fail descriptive check compared late-window mean ISF between composite and
 each pure component on the Figure 4a panel.
 
+### 2.6 Model-based caged-diffusion refit protocol (Gate 5, pre-registered)
+
+Gate 4's primary test compares two fixed windows of a single curve; it does not ask whether the
+curve's overall shape is better described by a model with a built-in plateau. As a follow-up,
+pre-registered separately (`docs/BUILD_PLAN.md`, "Gate 5") after Gate 4's result and before this
+script was run, we fit two two-parameter models to each curve's full digitized range by weighted
+nonlinear least squares (weights = 1/sigma_i^2, sigma_i the same combined reported/digitization
+error used in Gate 4): a global power law, `MSD(t) = A t^alpha`, and the standard confined-diffusion
+form from the single-particle-tracking literature (Kusumi et al., 1993), `MSD(t) = P[1 -
+exp(-t/tau)]`. The two were compared by small-sample-corrected AIC (AICc), propagated through the
+same style of 2000-draw Gaussian-perturbation bootstrap Gate 4 used (fresh seed, not reused from
+Gate 4). The pre-registered pass criterion required, for the composite curve, that the confined
+model be preferred (95% CI of `delta_AICc = AICc_powerlaw - AICc_confined` entirely positive) with
+`tau` constrained inside the observed Delta t range (95% CI lower bound below the curve's maximum
+digitized Delta t, ruling out a pass driven by an unconstrained, effectively-extrapolated plateau);
+and, for both pure-component curves, that this same combination not hold.
+
 ## 3. Results
 
 ### 3.1 Estimator calibration and the HODMD bias (Gate 0/0b/0c)
@@ -181,6 +204,25 @@ mean ISF (0.419, [0.399, 0.440]) sat well above hyaluronan's (0.093, [0.084, 0.1
 (0.140, [0.131, 0.149]), with both pairwise differences excluding zero. This matches the paper's own
 qualitative framing of the composite network retaining a non-decaying caged fraction.
 
+### 3.5 Model-based caged-diffusion refit (Gate 5)
+
+The confined-diffusion model was not preferred for any curve; the power-law model won decisively in
+all three cases (Table 3). For composite, `tau`'s 95% CI ([1.199, 1.658]) sat comfortably inside the
+observed range (maximum digitized Delta t = 10.727), so this was a well-determined fit, not one
+where the confined model was starved of the curvature it needed, and it still lost to the power law
+by 70-149 AICc points, an order of magnitude past the conventional `|delta AICc| > 10` "strong
+support" threshold. Both pure-component curves showed the same pattern more strongly still
+(hundreds of AICc points). Gate 5 fails on its pre-registered criterion.
+
+**Table 3. Gate 5 model comparison (S14a MSD curves, 2000/2000 bootstrap draws converged for every
+curve).**
+
+| curve | max Delta t | delta_AICc (powerlaw - confined) [95% CI] | tau [95% CI] | criterion |
+|---|---|---|---|---|
+| composite | 10.727 | -109.340 [-149.145, -69.690] | 1.430 [1.199, 1.658] | (A) FAIL |
+| hyaluronan | 1.071 | -557.752 [-621.878, -494.394] | 0.136 [0.107, 0.171] | (B) PASS |
+| collagen (1 mg/mL) | 1.062 | -320.114 [-376.011, -263.517] | 0.300 [0.265, 0.335] | (B) PASS |
+
 ## 4. Discussion
 
 The two halves of this study point in different directions on the same question, and we report both
@@ -216,6 +258,19 @@ expectation; a short-lag noise floor is the more parsimonious explanation, and i
 the early-window slope comparison's noise for all three curves. We did not attempt to correct for it,
 to avoid introducing a post-hoc adjustment tuned to this dataset's outcome.
 
+Gate 5's model-based refit, run as a direct follow-up to Gate 4's ambiguous result, sharpens rather
+than overturns it. Where Gate 4's confidence interval simply included zero, consistent with either
+"no effect" or "underpowered to detect one," Gate 5 found positive evidence in the other direction:
+a well-constrained confined-diffusion fit (tau's interval sat inside the data range, not pushed
+past it) still lost decisively to a plain power law. Two different statistical approaches, a local
+two-window slope comparison and a whole-curve nonlinear model comparison, now agree that no
+MSD-level flattening is detectable within Supplementary Figure S14a's digitized Delta t range. Read
+together with the ISF-panel check, which does show the expected effect on an independent panel of
+the same figure, the most parsimonious explanation remains the one Gate 4 already suggested: the
+panel's own Delta t range most likely ends before the composite network's MSD curve visibly
+flattens, a property of the published figure, not of which test is applied to the digitized points
+within it.
+
 The HODMD bias diagnosis (Gate 0/0b) stands independently of the real-data result and is, we think,
 the most broadly useful finding here: HODMD's eigenvalue-based forward reconstruction introduces a
 systematic, growing bias when applied to power-law-in-time signals, because such signals are not a
@@ -230,36 +285,42 @@ application concluded.
 ## 5. Limitations
 
 No raw single-particle trajectory data for the target system is publicly available; author contact
-requesting it is in progress but had not yielded data at the time of writing. The Mori-Zwanzig
+requesting it (Koenderink, corresponding author, contacted directly) had not yielded a response as
+of 2026-07-31. The Mori-Zwanzig
 memory kernel was validated only on synthetic data (Gates 2-3); digitized ensemble summary curves
 cannot supply the per-trajectory time series the method requires, so this is a structural gap that
 more digitization effort cannot close. The collagen-family curves in both digitized figures share
 color with the plot frame, tick marks, and legend text, the same failure mode that produced three
 caught contamination bugs elsewhere; we cannot rule out smaller, harder-to-spot residual
 contamination of the same kind. The short-lag-time noise floor discussed above was not corrected
-for. Finally, this study tests a single literature target; the estimator pipeline's behavior on
-other subdiffusive systems, or other operationalizations of "caging" (for example, an explicit
-caged-diffusion functional-form fit rather than two-window slope comparison), remains untested and
-would need its own pre-registration before being run, to avoid retroactively building a criterion
-around this dataset's specific outcome.
+for. This study tests a single literature target; the estimator pipeline's behavior on other
+subdiffusive systems remains untested. We did test a second operationalization of "caging" on this
+same target, an explicit caged-diffusion functional-form fit rather than two-window slope comparison
+(Gate 5, Section 3.5), pre-registered separately to avoid retroactively building a criterion around
+this dataset's specific outcome; it also did not detect the target signature, more decisively than
+the first test. With that avenue closed on the existing digitized data, raw trajectory data from the
+original authors is the only remaining concrete path to a sharper real-data test.
 
 ## 6. Conclusion
 
 We report a pre-registered, mixed-outcome test of Koopman/Mori-Zwanzig-based subdiffusion estimators
-against literature-digitized real data. The estimator pipeline and memory-kernel extension are
-internally validated on synthetic data, including a diagnosed and fixed bias in a commonly used DMD
-variant; the real-data test did not confirm the target caging signature on its primary, locked
-criterion, though a secondary descriptive check on an independent panel of the same figure did show
-the expected qualitative signature. We report this as an honest mixed result rather than reframe it
-as a validation, and identify two concrete paths to a sharper test: raw trajectory data from the
-original authors, or a pre-registered model-based refit using an explicit caged-diffusion functional
-form.
+against literature-digitized real data, followed by a second pre-registered test using a genuinely
+different statistic. The estimator pipeline and memory-kernel extension are internally validated on
+synthetic data, including a diagnosed and fixed bias in a commonly used DMD variant; neither
+real-data test confirmed the target caging signature on its primary, locked criterion (a local
+two-window slope comparison, and a whole-curve confined-diffusion model fit compared by AICc),
+though a secondary descriptive check on an independent panel of the same figure did show the
+expected qualitative signature. We report this as an honest mixed result rather than reframe it as a
+validation. With the model-based refit now also run and negative, and author outreach sent but
+unanswered as of this writing, raw trajectory data from the original authors is the one remaining
+concrete path to a sharper test.
 
 ## Data and code availability
 
 All code, synthetic data generators, digitization scripts, and gate results are available at
 https://github.com/AmunRaPtah/ergofluids. Digitized figure data (`repo/data/digitized/`) and the
-pre-registered gate criteria (`docs/BUILD_PLAN.md`, `repo/scripts/run_gate4.py`) are included.
+pre-registered gate criteria (`docs/BUILD_PLAN.md`, `repo/scripts/run_gate4.py`,
+`repo/scripts/run_gate5.py`) are included.
 
 ## References
 
@@ -269,9 +330,18 @@ diffusion in extracellular hydrogels. arXiv:1909.05091.
 Demo, N., Tezzele, M., & Rozza, G. (2018). PyDMD: Python Dynamic Mode Decomposition. Journal of Open
 Source Software, 3(22), 530.
 
+Fujiwara, T. K., Iwasawa, K., Kalay, Z., Tsunoyama, T. A., Watanabe, Y., Umemura, Y. M., Murakoshi,
+H., Suzuki, K. G. N., Nemoto, Y. L., Morone, N., & Kusumi, A. (2016). Confined diffusion of
+transmembrane proteins and lipids induced by the same actin meshwork lining the plasma membrane.
+Molecular Biology of the Cell, 27(7), 1101-1119.
+
 Ichinaga, S. M., Andreuzzi, F., Demo, N., Tezzele, M., Lapo, K., Rozza, G., Brunton, S. L., & Kutz,
 J. N. (2024). PyDMD: A Python Package for Robust Dynamic Mode Decomposition. Journal of Machine
 Learning Research, 25.
+
+Kusumi, A., Sako, Y., & Yamamoto, M. (1993). Confined lateral diffusion of membrane receptors as
+studied by single particle tracking (nanovid microscopy). Effects of calcium-induced differentiation
+in cultured epithelial cells. Biophysical Journal, 65(5), 2021-2040.
 
 Le Clainche, S., & Vega, J. M. (2017). Higher order dynamic mode decomposition. SIAM Journal on
 Applied Dynamical Systems, 16(2), 882-925.

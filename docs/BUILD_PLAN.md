@@ -201,6 +201,117 @@ includes zero or favors the memoryless model.
 built to mechanistically resemble caging, still not the paper's actual reported data. It is a
 stronger stand-in than Gate 2, not a substitute for real data.
 
+## Gate 5: model-based caged-diffusion fit (same digitized data, different functional form)
+
+**Pre-registered here, before this gate's script is run.** Gate 4's primary test (fixed
+early/late-window log-log OLS slope comparison) failed for the composite network on its own
+locked criterion (`docs/gate-result-phase3-realdata.md`). That write-up's "What would change this
+result" section named two untried follow-ups: raw trajectory data from the paper's authors, or a
+model-based fit of an explicit caged-diffusion functional form to the whole MSD curve instead of
+comparing two fixed windows. Author outreach was drafted and sent (`docs/author-outreach-draft.md`)
+and has not received a response as of 2026-07-31. This gate tests the second option, on the same
+S14a digitized data, with no new data collected and no change to Gate 4's own result or verdict.
+
+**Model.** The standard confined/restricted-diffusion MSD form from the single-particle-tracking
+literature, originating in Kusumi, Sako & Yamamoto, *Biophys. J.* 65:2021-2040 (1993), and restated
+in numerous later SPT methods papers (for example Fujiwara et al., *Mol. Biol. Cell* 27:1101-1119,
+2016, Eq. 3 region):
+
+```
+MSD_confined(Delta t) = P * [1 - exp(-Delta t / tau)]
+```
+
+with `P` the MSD plateau value (proportional to the square of an effective confinement length
+scale) and `tau` the characteristic confinement relaxation time. This is a genuinely different test
+from Gate 4: it fits the curve's full visible shape at once rather than comparing two local
+windows, and it is an established literature model, not one invented for or tuned to this
+dataset's outcome.
+
+Compared against a single global power law across the same full curve, the same functional family
+Gate 0/1/4 already used:
+
+```
+MSD_powerlaw(Delta t) = A * Delta t^alpha
+```
+
+Both models have 2 free parameters, so neither is penalized more than the other for flexibility
+going in.
+
+**Fit method.** Weighted nonlinear least squares (weights = `1/sigma_i^2`, `sigma_i = sqrt(reported_error_i^2
++ digitization_error_i^2)`, the same combined-in-quadrature error Gate 4 used) on the full digitized
+curve, no early/late windowing. Compared via small-sample-corrected AIC:
+`AICc = chi^2 + 2k + 2k(k+1)/(n-k-1)`, `chi^2` the weighted residual sum of squares at each model's
+best fit, `k=2` for both models, so the AICc difference is directly comparable without needing an
+absolute likelihood normalization. Applied to the same three curves Gate 4 used (composite,
+hyaluronan, collagen_1mg). Propagated via the same style of 2000-draw Gaussian-perturbation
+bootstrap as Gate 4 (perturb each point's `y` by `N(0, sigma_i)`, refit both models, record
+`delta_AICc = AICc_powerlaw - AICc_confined` and, for the confined model, `tau`), seed 20260731 (a
+fresh seed for this later, separately-run gate; Gate 4's seed 20260723 is not reused). Any bootstrap
+draw where either model's fit fails to converge is dropped and the drop count is reported directly,
+not silently absorbed into a smaller-than-stated n.
+
+**Pass criterion:**
+- **(A) Composite**: the 95% CI of `delta_AICc` is entirely positive (excludes zero, the confined
+  model is preferred in every bootstrap draw, not just on average) AND the 95% CI of `tau` has a
+  lower bound below the curve's own maximum digitized `Delta t` (the fitted plateau is at least
+  partly constrained by data inside the observed range in every bootstrap draw, not purely an
+  extrapolation beyond it).
+- **(B) Hyaluronan AND collagen_1mg**: (A)'s two parts do NOT both hold, that is, either the
+  `delta_AICc` CI does not exclude zero on the confined-preferred side, or `tau`'s CI lower bound
+  exceeds the curve's own maximum digitized `Delta t`. This operationalizes "the pure networks
+  should not show a data-constrained confinement signature the way the composite is hypothesized
+  to."
+
+**Fail** if (A) fails for composite, or (B) fails (a pure-component curve looks just as
+data-constrained-confined as composite is hypothesized to) for either pure-component curve.
+
+**Explicitly not claimed by a pass here**: same standing caveat as Gate 4, this still uses
+literature-digitized summary curves, not raw trajectory data. A pass would show a plateau shape is
+detectable in the composite curve's overall form using a standard confined-diffusion model,
+succeeding where Gate 4's fixed-window slope comparison did not; it would not validate against the
+paper's own raw measurements, and it would not overturn or retest Gate 4's own specific finding
+that within-window curvature is not detectable in this Delta t range, a global functional-form fit
+and a local two-window slope comparison can legitimately disagree because they use the curve's
+shape differently, and both results would stand side by side.
+
+**Known risk, stated before running**: Gate 4's own write-up already noted the composite curve may
+not extend far enough in `Delta t` to show flattening at all ("Reaching the point where MSD itself
+visibly flattens would likely require probing longer Delta t ... than S14a's own axis range extends
+to"). If that is correct, `tau`'s bootstrap distribution may be poorly constrained (many draws
+pushing `tau` far beyond the data range), which criterion (A)'s `tau`-CI condition is designed to
+catch and report honestly as a data-range limitation rather than let it pass silently on `delta_AICc`
+alone.
+
+No parameter or criterion changes after seeing the numbers below.
+
+### Gate 5 result
+
+Run 2026-07-31, `repo/scripts/run_gate5.py`, seed 20260731, 2000/2000 bootstrap draws converged
+for all three curves (0 dropped). Full detail and discussion in
+`docs/gate-result-phase3-gate5-cagedfit.md`; summary:
+
+| curve | delta_AICc (powerlaw − confined) [95% CI] | confined preferred in all draws | tau [95% CI] | tau CI lower bound < max Delta t | criterion |
+|---|---|---|---|---|---|
+| composite | -109.340 [-149.145, -69.690] | NO | 1.430 [1.199, 1.658] | YES | (A) **FAIL** |
+| hyaluronan | -557.752 [-621.878, -494.394] | NO | 0.136 [0.107, 0.171] | YES | (B) PASS |
+| collagen_1mg | -320.114 [-376.011, -263.517] | NO | 0.300 [0.265, 0.335] | YES | (B) PASS |
+
+**Gate 5 verdict: FAIL** (criterion A does not hold for composite: the power-law model is
+decisively preferred over the confined-diffusion model, not the reverse).
+
+This is a sharper negative result than Gate 4, not merely a repeat of it. `tau` is well-constrained
+inside the observed range for composite (95% CI [1.199, 1.658], well below the curve's max digitized
+`Delta t` of 10.727), so the "known risk" flagged before running, that `tau` might be pushed
+unconstrained beyond the data range, did not materialize; the confined model got a fair,
+well-determined fit and still lost decisively (`delta_AICc` 95% CI entirely below roughly -69,
+versus a `>0` bar for a pass). The composite MSD curve is better described, over this digitized
+`Delta t` range, by a single global power law than by a model with a built-in plateau. This does not
+overturn Gate 4 (a local two-window slope comparison and a global functional-form fit are different,
+non-redundant tests, and both are reported as run); it removes the model-based refit as an open
+follow-up, since it was tried and did not find a caging signature either, this time with a decisive
+rather than ambiguous result. Per `BUILD_PLAN.md`'s phase sequencing rule, Phase 4 (IP/venture
+material) still does not open on this result.
+
 ## Phase sequencing
 
 1. **Phase 1 (this pass, complete)**: Gate 0 (failed for `dmd`, passed for `ssa` after diagnosis

@@ -1,6 +1,6 @@
 # ErgoFluids: handoff
 
-Last updated: 2026-07-23.
+Last updated: 2026-07-31.
 
 ## State
 
@@ -25,10 +25,12 @@ why); only PyDMD is used in Phase 1.
 
 ## Immediate next step
 
-Phase 3 is done (result below). Phase 4 does not open on this result; see the
-paragraph after the Gate 4 result for what would need to be true first, and
-`docs/publication-angle.md` / `docs/ip-product-angle.md` for the two
-contingent write-ups produced instead of IP/venture material.
+Phase 3 is done, and its one open follow-up (the model-based caged-diffusion
+refit, Gate 5) has now also been run and failed; see "Gate 5" below. Phase 4
+does not open on this result; see the paragraph after the Gate 4 result for
+what would need to be true first, and `docs/publication-angle.md` /
+`docs/ip-product-angle.md` for the two contingent write-ups produced instead
+of IP/venture material.
 
 Phase 2 is done. Gate 2 (`docs/gate-result-phase2-mzmd.md`): the ported MZMD
 memory kernel (`repo/src/ergofluids/mz/mzmd.py`) beats a memoryless fit on a
@@ -77,12 +79,34 @@ supplementary figure covers).
 Per `BUILD_PLAN.md`'s phase sequencing rule ("Phase 4+: IP and venture
 material, only after a phase-3-or-later gate has passed against real data"),
 **Phase 4 should not proceed** on the strength of this gate; Gate 4 failed its
-primary criterion. Options for a follow-up, not yet started: request raw
-trajectory data from the paper's authors (still the only path to a real test
-of within-window MSD flattening), or refit with an explicit caged-diffusion
-functional form instead of fixed-window OLS slopes (noted as a candidate in
-the gate-result doc, deliberately not attempted this pass to avoid
-retroactively tuning a criterion around this dataset's outcome).
+primary criterion. Both follow-up options named at the time (request raw
+trajectory data from the paper's authors, or refit with an explicit
+caged-diffusion functional form instead of fixed-window OLS slopes) have now
+been pursued; see "Gate 5" below and the author-outreach note in "Gotchas."
+
+## Gate 5 (2026-07-31): model-based caged-diffusion refit
+
+`docs/gate-result-phase3-gate5-cagedfit.md`: fit an explicit confined-diffusion
+MSD model (`P * [1 - exp(-t/tau)]`, the standard Kusumi et al. 1993
+single-particle-tracking form) against a global power law on the same S14a
+digitized curves Gate 4 used, compared by AICc under the same style of
+error-propagated bootstrap, pre-registered in `docs/BUILD_PLAN.md` ("Gate 5")
+before running. **Result: FAIL**, and more decisively than Gate 4. For the
+composite curve, `tau` came out well-constrained inside the observed range
+(95% CI [1.199, 1.658], curve extends to Delta t = 10.727), so this was a
+fair fit, not a degenerate one, and the power-law model still beat the
+confined model by roughly 70 to 149 AICc points across the full bootstrap
+distribution, decisively past the conventional `|delta AICc| > 10` "strong
+support" bar. Both pure-component curves show the same pattern, as expected.
+Two independent statistical approaches (Gate 4's local two-window slope
+comparison, Gate 5's whole-curve nonlinear model comparison) now agree: no
+MSD-level flattening is detectable within this digitized Delta t range. This
+does not overturn Gate 4's own result or the separate, non-locked ISF-plateau
+check (which does show a real effect); it specifically closes the "maybe a
+different functional form would catch it" question that Gate 4 left open.
+Removes the model-based refit as an open follow-up in
+`docs/publication-angle.md` and `docs/ip-product-angle.md` (both updated
+alongside this gate). Phase 4 still does not open.
 
 `docs/publication-angle.md` and `docs/ip-product-angle.md` record what this
 result does and does not support: a modest methods story (the Gate 0 HODMD
@@ -110,3 +134,8 @@ Alpha=0.7 and alpha=1.0 for `ssa` (Gate 0) were only tested at n=20 (19/20,
 - The BMF source document's IP/revenue language (Alice/Mayo argument, royalty
   tiers, "$10 billion" market figure) is not sourced and is not reused
   anywhere in this project. See `venture/PLACEHOLDER.md`.
+- Author outreach (`docs/author-outreach-draft.md`, sent to the corresponding
+  author, Prof. Gijsje Koenderink) has not received a response as of
+  2026-07-31. Raw trajectory data therefore remains unavailable; do not treat
+  it as "in progress with a likely reply coming" in any future write-up
+  without checking for an actual response first.
