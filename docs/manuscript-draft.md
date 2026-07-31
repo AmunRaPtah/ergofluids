@@ -1,9 +1,8 @@
 # Diagnosing and testing a Koopman/Mori-Zwanzig subdiffusion estimator: a pre-registered gate sequence from synthetic validation to a literature-digitized real-data test
 
-**Author:** Eniola Olutogun¹
+**Author:** Eniola Olutogun
 
-¹ M.Sc. Digital Health, Hasso Plattner Institute / University of Potsdam. Corresponding author:
-[email address to be filled in].
+Corresponding author: ennyolutogun@gmail.com
 
 **Status:** first full draft, 2026-07-23; updated 2026-07-31 to add the Gate 5 model-based refit.
 Target venue not yet selected. All results below are taken directly from
@@ -307,10 +306,8 @@ application concluded.
 
 ## 5. Limitations
 
-No raw single-particle trajectory data for the target system is publicly available; author contact
-requesting it (Koenderink, corresponding author, contacted directly) had not yielded a response as
-of 2026-07-31. The Mori-Zwanzig
-memory kernel was validated only on synthetic data (Gates 2-3); digitized ensemble summary curves
+No raw single-particle trajectory data for the target system is publicly available. The
+Mori-Zwanzig memory kernel was validated only on synthetic data (Gates 2-3); digitized ensemble summary curves
 cannot supply the per-trajectory time series the method requires, so this is a structural gap that
 more digitization effort cannot close. The collagen-family curves in both digitized figures share
 color with the plot frame, tick marks, and legend text, the same failure mode that produced three
@@ -334,14 +331,12 @@ real-data test confirmed the target caging signature on its primary, locked crit
 two-window slope comparison, and a whole-curve confined-diffusion model fit compared by AICc),
 though a secondary descriptive check on an independent panel of the same figure did show the
 expected qualitative signature. We report this as an honest mixed result rather than reframe it as a
-validation. With the model-based refit now also run and negative, and author outreach sent but
-unanswered as of this writing, raw trajectory data from the original authors is the one remaining
-concrete path to a sharper test.
+validation. With the model-based refit now also run and negative, raw trajectory data from the
+original authors is the one remaining concrete path to a sharper test.
 
 ## Competing interests
 
-The author declares no competing interests. [Placeholder pending author confirmation: no funding
-source, commercial affiliation, or financial interest is currently on file for this work.]
+The author declares no competing interests.
 
 ## Data and code availability
 
