@@ -48,14 +48,15 @@ threshold, making it reusable for extracting quantitative data from published fi
 
 ## 1. Introduction
 
-Hyaluronan-collagen hydrogels are a widely used biomimetic model for the extracellular matrix that
-macromolecular drugs must cross in dense tissue, including tumor stroma. Particle transport through
-these gels is often subdiffusive, and the specific exponent and its dependence on network
-composition carries information about pore size, crosslinking, and caging behavior. Koopman-operator
-methods, including Dynamic Mode Decomposition (DMD) and its variants, are increasingly used to
-extract dynamical structure, including scaling exponents, from time-series data, and Mori-Zwanzig
-formalisms offer a principled way to add memory effects that plain Markovian DMD misses. Applying
-these tools to macromolecular transport in tissue-like gels is, to our knowledge, untested. We
+Hyaluronan-collagen hydrogels are a widely used biomimetic model for the extracellular matrix [1]
+that macromolecular drugs must cross in dense tissue, including tumor stroma [2]. Particle transport
+through these gels is often subdiffusive [3], and the specific exponent and its dependence on
+network composition carries information about pore size, crosslinking, and caging behavior.
+Koopman-operator methods, including Dynamic Mode Decomposition (DMD) and its variants, are
+increasingly used to extract dynamical structure, including scaling exponents, from time-series data
+[4,5], and Mori-Zwanzig formalisms [6,7] offer a principled way to add memory effects that plain
+Markovian DMD misses. Applying these tools to macromolecular transport in tissue-like gels is, to our
+knowledge, untested. We
 report a pre-registered gate sequence built to test that application honestly: synthetic validation
 first, then a test against the closest available real (if indirect, literature-digitized) data, with
 the pass/fail criteria fixed before the data was digitized.
@@ -67,7 +68,7 @@ the pass/fail criteria fixed before the data was digitized.
 We tested three estimators for the subdiffusive scaling exponent alpha, defined via mean-squared
 displacement (MSD) proportional to Delta t^alpha. `loglog` performs ordinary least-squares
 regression of log(MSD) on log(Delta t). `dmd` applies Higher-Order Dynamic Mode Decomposition
-(HODMD [1]), via the PyDMD implementation [2,3], to a delay-embedded trajectory and recovers alpha from the fitted eigenvalue spectrum
+(HODMD [8]), via the PyDMD implementation [9,10], to a delay-embedded trajectory and recovers alpha from the fitted eigenvalue spectrum
 via forward reconstruction. `ssa` uses the same delay-embedding matrix as `dmd` but replaces
 HODMD's eigenvalue-based forward simulation with Hankel-SVD low-rank projection and anti-diagonal
 averaging (Singular Spectrum Analysis-style denoising), with the exponent then read off the
@@ -75,17 +76,17 @@ denoised curve by log-log fit. All three were implemented in `src/ergofluids/koo
 
 ### 2.2 Mori-Zwanzig memory kernel
 
-We ported the Mori-Zwanzig Mode Decomposition (MZMD) algorithm described by Woodward et al. [4]
+We ported the Mori-Zwanzig Mode Decomposition (MZMD) algorithm described by Woodward et al. [11]
 from its reference Julia implementation to Python (`src/ergofluids/mz/mzmd.py`). The kernel order
 n_ks controls the number of memory terms retained; n_ks = 1 reduces the method to a memoryless
 (Markovian) fit.
 
 ### 2.3 Synthetic validation protocol
 
-Gates 0 and 1 used 2D fractional Brownian motion trajectories (150 particles, 80 time steps, 150
-bootstrap resamples per estimate). Gate 0 tested bootstrap interval calibration (target: 18/20
-coverage at nominal 90%, at alpha_true in {0.5, 0.7, 1.0}). Gate 1 tested whether the estimators
-separate two literature-anchored exponent regimes (single-component, alpha ~ 1.0;
+Gates 0 and 1 used 2D fractional Brownian motion [12] trajectories (150 particles, 80 time steps,
+150 percentile-bootstrap resamples per estimate [13]). Gate 0 tested bootstrap interval calibration
+(target: 18/20 coverage at nominal 90%, at alpha_true in {0.5, 0.7, 1.0}). Gate 1 tested whether the
+estimators separate two literature-anchored exponent regimes (single-component, alpha ~ 1.0;
 hyaluronan-collagen composite, alpha ~ 0.5), with a pre-registered pass criterion of non-overlapping
 95% CIs and a composite-regime point estimate within +/-0.15 of 0.5.
 
@@ -100,7 +101,7 @@ memory-augmented fits.
 ### 2.4 Real-data acquisition and digitization
 
 No public per-trajectory or raw ensemble dataset exists for the target system. We therefore
-digitized two published figures from Burla et al. [5]: Figure 4a (intermediate
+digitized two published figures from Burla et al. [14]: Figure 4a (intermediate
 scattering function, ISF, vs. tq^2, for 0.6 micron tracers in composite, hyaluronan-only, and
 collagen-only networks) and Supplementary Figure S14a (ensemble MSD vs. Delta t for the same
 systems). Figures were rendered from the source PDF at 400 DPI, cropped to the panel region, and
@@ -139,9 +140,9 @@ pre-registered separately (`docs/BUILD_PLAN.md`, "Gate 5") after Gate 4's result
 script was run, we fit two two-parameter models to each curve's full digitized range by weighted
 nonlinear least squares (weights = 1/sigma_i^2, sigma_i the same combined reported/digitization
 error used in Gate 4): a global power law, `MSD(t) = A t^alpha`, and the standard confined-diffusion
-form from the single-particle-tracking literature [6], restated in later methods papers, e.g. [7],
+form from the single-particle-tracking literature [15], restated in later methods papers, e.g. [16],
 `MSD(t) = P[1 - exp(-t/tau)]`. The two were compared by
-small-sample-corrected AIC (AICc), propagated through the
+small-sample-corrected AIC (AICc) [17], propagated through the
 same style of 2000-draw Gaussian-perturbation bootstrap Gate 4 used (fresh seed, not reused from
 Gate 4). The pre-registered pass criterion required, for the composite curve, that the confined
 model be preferred (95% CI of `delta_AICc = AICc_powerlaw - AICc_confined` entirely positive) with
@@ -156,8 +157,8 @@ dynamic reconstruction entirely). As a separate, later-pre-registered follow-up
 (`docs/BUILD_PLAN.md`, "Gate 6"), independent of the real-data gates, we asked whether the bias is
 specific to HODMD or shared by other established DMD-family methods, using three PyDMD-implemented
 candidates chosen for mechanistic diversity: `HODMD(forward_backward=True)` (forward-backward
-operator averaging [8], applied to the identical HODMD configuration
-Gate 0 tested), `BOPDMD` (Bagging, Optimized DMD [9,10]), and `SubspaceDMD` [11]. `BOPDMD` and
+operator averaging [18], applied to the identical HODMD configuration
+Gate 0 tested), `BOPDMD` (Bagging, Optimized DMD [19,20]), and `SubspaceDMD` [21]. `BOPDMD` and
 `SubspaceDMD` do not natively delay-embed a scalar signal, so both were fit on the identical
 Hankel-matrix construction `ssa` uses and reassembled to a 1D curve the same way, isolating "which
 reconstruction algorithm is applied to the same delay-embedded matrix" as the only variable against
@@ -506,38 +507,65 @@ criteria are in `docs/BUILD_PLAN.md`; gate scripts are in `repo/scripts/` (`run_
 
 ## References
 
-1. Le Clainche S, Vega JM. Higher order dynamic mode decomposition. SIAM J Appl Dyn Syst.
+1. Amorim S, Reis CA, Reis RL, Pires RA. Extracellular matrix mimics using hyaluronan-based
+biomaterials. Trends Biotechnol. 2021;39(1):90-104.
+
+2. Netti PA, Berk DA, Swartz MA, Grodzinsky AJ, Jain RK. Role of extracellular matrix assembly in
+interstitial transport in solid tumors. Cancer Res. 2000;60(9):2497-2503.
+
+3. Höfling F, Franosch T. Anomalous transport in the crowded world of biological cells. Rep Prog
+Phys. 2013;76(4):046602.
+
+4. Schmid PJ. Dynamic mode decomposition of numerical and experimental data. J Fluid Mech.
+2010;656:5-28.
+
+5. Brunton SL, Budišić M, Kaiser E, Kutz JN. Modern Koopman theory for dynamical systems. SIAM Rev.
+2022;64(2):229-340.
+
+6. Zwanzig R. Memory effects in irreversible thermodynamics. Phys Rev. 1961;124(4):983-992.
+
+7. Mori H. Transport, collective motion, and Brownian motion. Prog Theor Phys. 1965;33(3):423-455.
+
+8. Le Clainche S, Vega JM. Higher order dynamic mode decomposition. SIAM J Appl Dyn Syst.
 2017;16(2):882-925.
 
-2. Demo N, Tezzele M, Rozza G. PyDMD: Python Dynamic Mode Decomposition. J Open Source Softw.
+9. Demo N, Tezzele M, Rozza G. PyDMD: Python Dynamic Mode Decomposition. J Open Source Softw.
 2018;3(22):530.
 
-3. Ichinaga SM, Andreuzzi F, Demo N, Tezzele M, Lapo K, Rozza G, et al. PyDMD: A Python Package for
+10. Ichinaga SM, Andreuzzi F, Demo N, Tezzele M, Lapo K, Rozza G, et al. PyDMD: A Python Package for
 Robust Dynamic Mode Decomposition. J Mach Learn Res. 2024;25.
 
-4. Woodward M, Lin YT, Tian Y, Hader C, Fasel H, Livescu D. Mori-Zwanzig mode decomposition:
+11. Woodward M, Lin YT, Tian Y, Hader C, Fasel H, Livescu D. Mori-Zwanzig mode decomposition:
 Comparison with time-delay embeddings. arXiv:2311.09524 [Preprint]. 2023.
 
-5. Burla F, Sentjabrskaja T, Pletikapic G, van Beugen J, Koenderink GH. Particle diffusion in
+12. Mandelbrot BB, Van Ness JW. Fractional Brownian motions, fractional noises and applications.
+SIAM Rev. 1968;10(4):422-437.
+
+13. Efron B, Tibshirani RJ. An Introduction to the Bootstrap. New York: Chapman & Hall; 1993.
+
+14. Burla F, Sentjabrskaja T, Pletikapic G, van Beugen J, Koenderink GH. Particle diffusion in
 extracellular hydrogels. arXiv:1909.05091 [Preprint]. 2019.
 
-6. Kusumi A, Sako Y, Yamamoto M. Confined lateral diffusion of membrane receptors as studied by
+15. Kusumi A, Sako Y, Yamamoto M. Confined lateral diffusion of membrane receptors as studied by
 single particle tracking (nanovid microscopy). Effects of calcium-induced differentiation in
 cultured epithelial cells. Biophys J. 1993;65(5):2021-2040.
 
-7. Fujiwara TK, Iwasawa K, Kalay Z, Tsunoyama TA, Watanabe Y, Umemura YM, et al. Confined diffusion
+16. Fujiwara TK, Iwasawa K, Kalay Z, Tsunoyama TA, Watanabe Y, Umemura YM, et al. Confined diffusion
 of transmembrane proteins and lipids induced by the same actin meshwork lining the plasma membrane.
 Mol Biol Cell. 2016;27(7):1101-1119.
 
-8. Dawson STM, Hemati MS, Williams MO, Rowley CW. Characterizing and correcting for the effect of
+17. Hurvich CM, Tsai CL. Regression and time series model selection in small samples. Biometrika.
+1989;76(2):297-307.
+
+18. Dawson STM, Hemati MS, Williams MO, Rowley CW. Characterizing and correcting for the effect of
 sensor noise in the dynamic mode decomposition. Exp Fluids. 2016;57(3):42.
 
-9. Askham T, Kutz JN. Variable projection methods for an optimized dynamic mode decomposition. SIAM
+19. Askham T, Kutz JN. Variable projection methods for an optimized dynamic mode decomposition. SIAM
 J Appl Dyn Syst. 2018;17(1):380-416.
 
-10. Sashidhar D, Kutz JN. Bagging, optimized dynamic mode decomposition (bop-dmd) for robust,
+20. Sashidhar D, Kutz JN. Bagging, optimized dynamic mode decomposition (bop-dmd) for robust,
 stable forecasting with spatial and temporal uncertainty-quantification. arXiv:2107.10878
 [Preprint]. 2021.
 
-11. Takeishi N, Kawahara Y, Yairi T. Subspace dynamic mode decomposition for stochastic Koopman
+21. Takeishi N, Kawahara Y, Yairi T. Subspace dynamic mode decomposition for stochastic Koopman
 analysis. Phys Rev E. 2017;96(3):033310.
