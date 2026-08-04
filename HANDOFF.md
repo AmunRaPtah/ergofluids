@@ -22,6 +22,19 @@ drugs in a hydrogel (Wang 2026, Pharmaceutics) shows exactly that: Spearman rho(
 diffusivity) = +0.50, the wrong sign for steric-only theory, which requires a strongly negative
 relationship. Premise-level support, not a validation of network_sim's specific predictions.
 
+A second, stronger real-data check (`docs/gate-result-network-sim-hadjiev-thesis-check.md`,
+`scripts/check_hadjiev_thesis_real_data.py`) went further: Hadjiev's 2014 MASc thesis (Queen's
+University, supervised by Amsden himself; open access, handle 1974/12603) reports real FRAP
+diffusion data for four FITC-dextran probes (real hydrodynamic radii, real fiber radius) in real
+alginate hydrogels, digitized from the thesis's own Figures 15/16. Fitting `network_sim.baseline`'s
+proportionality constant per probe (not globally) surfaced a real, quantitative finding: the
+best-fit value decreases monotonically by 2.4x from the smallest to largest probe, meaning a single
+steric network parameter cannot fit all four real probes at once, the same direction the thesis's
+own reptation-based explanation predicts, now as a number. Two independent real datasets (this one,
+reptation; Wang 2026, adhesion) now show the same qualitative failure mode by different mechanisms.
+Still does not validate network_sim's own simulated adhesion/aspect-ratio axes or the full
+Brownian-dynamics simulator against real data, only the closed-form baseline formula.
+
 Active-learning recommender (`docs/gate-result-active-learning-recommender.md`,
 `src/ergofluids/network_sim/active_learning.py`, `scripts/recommend_next_experiment.py`): a
 different product bet than the zero-shot predictor above, given the real-data check found only
