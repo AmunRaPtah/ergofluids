@@ -51,6 +51,22 @@ tissue-like data" story, because Gate 4 did not show that on its primary, locked
    two real scripts' hand-read tick-mark pixel positions were themselves correct, since no
    independent ground truth exists for that step on the real PDF pages.
 
+   Since generalized into a config-driven tool (`src/ergofluids/digitize/`, 2026-08-04) and tested a
+   second, independent way: Gate 8 (`docs/gate-result-gate8-external-real-figure-validation.md`) ran
+   the generalized pipeline, including programmatic tick-mark calibration, on a real figure never
+   used anywhere else in this project (Zhao et al., *Nature Communications* 2026,
+   doi:10.1038/s41467-026-74008-w), recovering an exponent of 0.852 against the paper's own labeled
+   value of 0.85. This is the first test of the tool on a figure neither it nor its authors had seen
+   before, and it also surfaced a genuine limitation worth reporting alongside the pass: for figures
+   with no plotted error bars, `reported_error` can be contaminated by other page content (here, a
+   slope-reference annotation line), producing an uncalibrated confidence interval even when the
+   point estimate is accurate. Both the pass and the limitation belong in the write-up.
+
+   A third, independent pass followed: Gate 9 (`docs/gate-result-gate9-second-real-figure-validation.md`)
+   tested a different curve, color, and target value in the same paper (0.918 recovered against a
+   labeled 0.98), after diagnosing and fixing a related contamination mode, a same-colored slope
+   label overlapping the curve, by generalizing the tool's exclusion-box API from one box to a list.
+
 ## What is not publishable yet
 
 - Any claim that this pipeline "validates," "confirms," or "demonstrates" Koopman/Mori-Zwanzig

@@ -167,6 +167,53 @@ does not and cannot validate whether the two real scripts' hand-read tick-mark p
 themselves correct, since no independent ground truth exists for that step on the real PDF pages.
 Does not touch or reopen any real-data gate or Phase 4.
 
+## Tool generalization and Gate 8 (2026-08-04)
+
+Separate decision, made outside the transport-modeling thesis: since Phase 4 (IP/venture material)
+never opened, a fresh product angle was scoped instead of the original tumor-stroma transport claim,
+built on exactly what has already validated: the unbiased exponent estimator (Gate 0/0b/0c/6) and the
+digitization pipeline (Gate 7). What's actually validated is not "we model tumor-stroma transport,"
+it is "we accurately extract calibrated power-law exponents from published diffusion/rheology
+figures." That narrower claim became the scope for a standalone research tool, not a rename of the
+original thesis.
+
+The two hand-written per-figure scripts (`digitize_fig4a.py`, `digitize_s14a.py`) were generalized
+into a config-driven library and CLI: `src/ergofluids/digitize/{common,spec,exponent_fit}.py` (moved
+and extended from the old top-level `scripts/digitize_common.py`) plus `scripts/digitize_cli.py`. A
+new `FigureSpec` JSON describes a figure's crop box, axis calibration, and curve color once; the tool
+then digitizes it and, on request, fits a bootstrap-uncertainty power-law exponent using the same
+`ssa` estimator and error-propagation convention Gate 4/5 used by hand. The two original scripts and
+`run_gate7.py` were repointed to import from the package; all three reproduce their pre-refactor
+output exactly (same point counts, Gate 7 still passes with identical numbers). Two new tests added
+(`tests/test_digitize_tool.py`); full suite is 21 passing.
+
+`docs/gate-result-gate8-external-real-figure-validation.md` (protocol in `docs/BUILD_PLAN.md`, "Gate
+8"): tested the generalized tool on a real figure it had never seen, Fig. 1b of Zhao et al. (*Nature
+Communications* 17:7149, 2026, doi:10.1038/s41467-026-74008-w), which labels its own 7%-coverage
+EA-MSD curve's fitted slope as 0.85. The tool recovered 0.852 end to end from the raw PDF: axis
+calibration by programmatic tick-height detection, not by eye. **PASS.** It also surfaced a real,
+now-documented limitation: this figure has no plotted error bars, and a black slope-reference
+annotation line crossing the curve inflates `reported_error` in that region, producing a wide,
+asymmetric bootstrap CI despite the tight point estimate. The `y` values themselves are unaffected;
+the uncertainty quantification specifically needs either a contamination check or an honest
+no-calibrated-uncertainty fallback for bare-marker figures, before any claim stronger than "the point
+estimate matched" is made about that case.
+
+Direction from the author (2026-08-04): pursue both (1) folding this real-data validation into the
+already-drafted PLOS ONE manuscript's digitization-methodology contribution (done: new Section 3.8/
+Table 6 and a Discussion paragraph, reference [22]), and (2) a standalone JOSS software paper for the
+tool.
+
+Gate 9 (`docs/gate-result-gate9-second-real-figure-validation.md`): a second real-figure test, a
+different curve/color/target value in the same Zhao et al. paper (Fig. 1d's blue `<TA-MSD>` curve,
+labeled 0.98). First attempt failed (0.653 recovered) because the panel's own blue slope-label text
+shares the curve's color and got binned as data; fixed by generalizing `FigureSpec`'s single
+`legend_box` to a list, `exclude_boxes`. After the fix: 0.918 recovered, PASS. Full suite now 22
+tests.
+
+JOSS prep remaining: LICENSE (done, MIT), README with statement of need/install/usage (todo),
+`paper.md`/`paper.bib` (todo).
+
 ## Manuscript submission prep (2026-07-31)
 
 Target venue decided: PLOS ONE, direct submission (no arXiv-first preprint step per author

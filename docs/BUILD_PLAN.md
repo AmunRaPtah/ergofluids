@@ -525,6 +525,80 @@ digitizations are limited mainly by tick-reading precision, already carried as `
 in every downstream gate, not by an undiagnosed flaw in the extraction code. Does not reopen Phase 4
 or any real-data gate's verdict.
 
+## Gate 8: external real-figure validation of the generalized digitization tool
+
+**Context.** Following a separate decision (2026-08-04) to generalize the two hand-written
+per-figure scripts (`digitize_fig4a.py`, `digitize_s14a.py`) into a reusable, config-driven tool
+(`src/ergofluids/digitize/{common,spec,exponent_fit}.py`, `scripts/digitize_cli.py`), a real-world
+test of that generalization was needed: Gate 7 validates the shared extraction machinery against a
+*synthetic* panel with an *analytically known* axis calibration; it says nothing about whether the
+tool works when a human (or an agent) has to read tick-mark pixel positions off a real, previously
+unseen PDF the way the original two figures' calibration was built. No figure from Burla et al.
+(arXiv:1909.05091) was reused, to keep this an honest test of generalization rather than a re-run of
+already-tuned parameters.
+
+**Pre-registration note, stated plainly.** Unlike Gates 0-7, the pass criterion below was fixed in
+conversation immediately before the digitization was run, not written into this file in a separate,
+earlier session. This is a weaker form of pre-registration than the rest of this project's practice
+and is recorded as such, not smoothed over.
+
+**Target figure.** Fig. 1b of Zhao et al. (*Nat Commun* 17:7149, 2026, doi:10.1038/s41467-026-74008-w,
+"Diffusional aging at water/oil interfaces laden with charged nanoparticles studied by single-molecule
+tracking"): ensemble-averaged MSD (EA-MSD) vs. lag time tau, log-log, three curves at NP surface
+coverage Phi = 0.15%/1%/7%. The paper labels the 7% (grey square) curve's fitted slope directly on
+the panel as **0.85**, and cross-confirms it in panel d ("EA-MSD proportional to t^0.85" at Phi = 7%).
+
+**Method.** The article PDF was fetched from the publisher (open access, Nature Communications).
+Fig. 1 renders on PDF page 3 at 400 DPI via the tool's own `render_page`. Axis tick-mark pixel
+positions were found by scanning for locally-taller dark-pixel runs along the frame edges (major
+ticks are visibly taller than minor ticks in this journal's plot style), not by eye: x-axis major
+ticks at pixel columns 736.5 (t=0.1s) and 1168.5 (t=1s); y-axis major ticks at pixel rows 1321.5
+(EA-MSD=1) and 1679.0 (EA-MSD=0.1). The 7% curve's grey-square marker fill color was sampled directly
+(RGB 192,192,192, distinct from the black frame/text/annotation-line pixels at RGB ~0,0,0), and
+matched with a `near_color` mask, tolerance 25. A legend-exclusion box was set from the same visual
+inspection. All of this went through the new `FigureSpec`/`digitize`/`estimate_exponent` API via
+`scripts/digitize_cli.py`, not through hand-written extraction code specific to this figure.
+
+**Pass criterion, fixed before running.** The `ssa` estimator's point estimate falls within +/-0.15
+of the paper's own labeled value (0.85), OR its 95% bootstrap CI includes 0.85.
+
+### Gate 8 result
+
+Run 2026-08-04. 125 points extracted. `ssa` point estimate: **0.852** (95% CI: [0.079, 0.869],
+n_boot=2000). **PASS on both criteria**: point estimate differs from the paper's labeled value by
+0.002, and the CI includes it.
+
+**A genuine limitation surfaced by this test, not visible in Gate 7's synthetic case.** The CI is
+wide and asymmetric despite the tight point estimate. Cause, diagnosed by inspecting the digitized
+CSV: 16 of 125 bins (t approximately 0.42-0.76s, where the paper's own black "0.85" slope-reference
+annotation line crosses the grey-square curve) show `reported_error` an order of magnitude above the
+curve's median, most likely because thin anti-aliased edge pixels of that black annotation line fall
+within the grey-square color tolerance in that region. Unlike the Burla et al. figures Gate 7's
+design was built around, this figure has no plotted per-point error bars at all, so
+`reported_error`'s intended meaning ("the paper's own plotted uncertainty") does not apply here; what
+it captures instead is contamination noise, which is a different thing that happens to load into the
+same column and the same bootstrap sigma. This does not compromise the point-estimate result (which
+depends on the `y` centroid values, not on `reported_error`), but it does mean the CI here should not
+be read as calibrated the way Gate 7 showed it to be for figures with real error bars.
+
+## Gate 9: second external real-figure validation, different curve and color
+
+Same weaker pre-registration form as Gate 8. **Target**: Fig. 1d's bottom panel of the same Zhao et
+al. paper, the blue `<TA-MSD>` curve at Phi = 7%, labeled 0.98, a different curve, color, and target
+value from Gate 8's 0.85. **Pass criterion**: same form as Gate 8, +/-0.15 of 0.98 or CI includes it.
+
+First attempt failed (point estimate 0.653): the panel's own blue "proportional to t^0.98" slope
+label sits inside the target color and region and got binned as data. Fixed by generalizing the
+`FigureSpec` API's single `legend_box` to a list, `exclude_boxes`, so a legend swatch and a
+same-colored annotation label can both be excluded in one spec. Full detail and result:
+`docs/gate-result-gate9-second-real-figure-validation.md`.
+
+### Gate 9 result
+
+Run 2026-08-04, after the `exclude_boxes` fix. 158 points extracted. `ssa` point estimate: **0.918**
+(95% CI: [0.844, 1.345]) against the paper's stated 0.98, difference 0.062. **PASS on both criteria.**
+Second, independent real-figure pass on a different curve, color, and target value than Gate 8.
+
 ## Phase sequencing
 
 1. **Phase 1 (this pass, complete)**: Gate 0 (failed for `dmd`, passed for `ssa` after diagnosis
