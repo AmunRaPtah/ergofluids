@@ -25,7 +25,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 
-from digitize_common import LogAxis, extract_curve, render_page
+from ergofluids.digitize.common import LogAxis, extract_curve, render_page
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 RENDER_DIR = REPO_ROOT / "scripts" / "_render_gate7"

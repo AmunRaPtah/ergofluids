@@ -1,6 +1,12 @@
-"""Shared helpers for digitizing figures from arXiv:1909.05091 (Burla et al.,
-"Particle diffusion in extracellular hydrogels"). Used by digitize_fig4a.py
-and digitize_s14a.py.
+"""Shared pixel-extraction primitives for digitizing figures from rendered
+PDF pages: render a page, crop to a panel, calibrate pixel<->data axes, and
+bin a color mask into (x, y, reported_error, digitization_error) points.
+
+Originally written for arXiv:1909.05091 (Burla et al., "Particle diffusion
+in extracellular hydrogels") as scripts/digitize_fig4a.py and
+scripts/digitize_s14a.py; moved here unchanged so the extraction logic is a
+reusable library rather than copy-pasted per figure. See `spec.py` in this
+package for the config-driven tool built on top of it.
 
 Method, in one place so it is auditable: render the target PDF page at high
 DPI, crop to a fixed sub-region around the target panel, locate the panel's
@@ -128,10 +134,11 @@ def extract_curve(
     bin_width: float = BIN_WIDTH_PX,
     marker_halfwidth_px: float = MARKER_HALFWIDTH_PX,
     max_row_span_px: float = 200.0,
-) -> list[tuple[float, float, float, float]]:
+) -> list[tuple[float, float, float, float, float]]:
     """Bin a boolean color mask by x-pixel column into `bin_width`-wide bins,
     and convert each bin's pixel centroid + spread to (x, y, reported_error,
-    digitization_error) in data units. Returns points sorted by x.
+    digitization_error, x_digitization_error) in data units. Returns points
+    sorted by x.
 
     Bins whose matched-pixel row span exceeds `max_row_span_px` are dropped:
     a real marker plus its error bar spans a modest fraction of the plot
@@ -139,7 +146,7 @@ def extract_curve(
     of an axis frame line or a legend border rather than actual curve data
     (the frame/legend colors can fall inside the same threshold as a dark or
     saturated curve color). This is a defense-in-depth check on top of the
-    explicit interior/legend pixel masks each script already applies.
+    explicit interior/legend pixel masks each caller already applies.
     """
     x_lo, x_hi = x_pixel_range
     points = []
@@ -168,17 +175,9 @@ def extract_curve(
 
         dig_err_y = y_axis.delta(marker_halfwidth_px, row_center)
         dig_err_x = x_axis.delta(bin_width / 2.0 + 1.0, col_center)
-        # Fold the x-direction digitization uncertainty into the reported
-        # y-error-equivalent is not meaningful (different axes); we report
-        # the y-side digitization error as the primary `digitization_error`
-        # column and note the x-side uncertainty is of comparable relative
-        # scale (see script docstrings / gate-result writeup).
         points.append((x_val, y_center_val, reported_error, dig_err_y, dig_err_x))
 
     points.sort(key=lambda p: p[0])
-    # drop (x, y, reported_error, digitization_error); keep x-digitization
-    # error accessible via the 5-tuple for callers that want it, but the CSV
-    # schema requested is 4 columns, so callers should use points[:, :4].
     return points
 
 

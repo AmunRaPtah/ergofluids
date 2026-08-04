@@ -16,7 +16,7 @@ from pathlib import Path
 
 import numpy as np
 
-from digitize_common import LinearAxis, LogAxis, crop_fractional, extract_curve, render_page, write_csv
+from ergofluids.digitize.common import LinearAxis, LogAxis, crop_fractional, extract_curve, render_page, write_csv
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 PDF_PATH = Path(

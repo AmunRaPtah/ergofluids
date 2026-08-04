@@ -3,6 +3,5 @@ __pycache__/
 *.pyc
 .pytest_cache/
 *.egg-info/
-scripts/_render/
-scripts/_render_gate7/
-scripts/_render_docx/
+scripts/_render*/
+scripts/_*.spec.json
