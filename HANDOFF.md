@@ -22,9 +22,20 @@ drugs in a hydrogel (Wang 2026, Pharmaceutics) shows exactly that: Spearman rho(
 diffusivity) = +0.50, the wrong sign for steric-only theory, which requires a strongly negative
 relationship. Premise-level support, not a validation of network_sim's specific predictions.
 
-IP/venture material still should not open on this, per the same gating discipline that applied to
-the Koopman/MZ work (see memory `ergofluids-ip-gating-discipline`); a premise-level real-data check
-is a weaker bar than the real-data gate that discipline requires.
+Active-learning recommender (`docs/gate-result-active-learning-recommender.md`,
+`src/ergofluids/network_sim/active_learning.py`, `scripts/recommend_next_experiment.py`): a
+different product bet than the zero-shot predictor above, given the real-data check found only
+premise-level support. Assumes a lab already has a handful of real pilot measurements and
+recommends which untested candidate to measure next (Gaussian Process uncertainty sampling, or a
+target-seeking mode), rather than needing a trustworthy zero-shot model. Validated synthetically
+(the sweep as a queryable ground-truth oracle, no real data exists yet to test against directly):
+uncertainty sampling reduces held-out prediction error 28% versus random sampling on average across
+8 seeds (MAE 0.0253 vs 0.0352), with lower run-to-run variance too.
+
+IP/venture material still should not open on any of this, per the same gating discipline that
+applied to the Koopman/MZ work (see memory `ergofluids-ip-gating-discipline`); a premise-level
+real-data check and a synthetic acquisition-strategy validation are both weaker bars than the
+real-data gate that discipline requires.
 
 The rest of this file is the (still-accurate, unmodified) history of the earlier Koopman/Mori-Zwanzig
 transport-modeling thesis, which this new direction sits alongside, not on top of.
