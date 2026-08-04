@@ -1,7 +1,9 @@
-# Design-partner outreach: drafts, none sent
+# Design-partner outreach: sent
 
-Status: **all four drafts below are unsent**. Review before anything goes out. Contact emails were
-verified against each person's own institutional page (not guessed), sources noted per contact.
+Status: **all four sent 2026-08-04**, from ennyolutogun@gmail.com via the Bitwarden-stored Gmail App
+Password (smtplib, matching the convention used for the earlier Burla/Koenderink outreach in
+`author-outreach-draft.md`). No responses yet. Contact emails were verified against each person's own
+institutional page before sending, not guessed.
 
 ## Candidates, and why each one specifically
 
@@ -156,11 +158,14 @@ Eniola Olutogun
 
 ---
 
-## Open items before sending any of these
+## Next steps
 
-- All four emails are verified against each person's own institutional/lab page, not guessed, but
-  double-check each is still current immediately before sending (faculty pages go stale).
-- Decide send order/timing: sending all four at once versus staggering to react to early replies.
-- Final read against memory `cv-claims-to-avoid` before sending: none of the four claims funding, an
-  incubator acceptance, a patent, or a built platform; each states a specific finding and a specific,
-  honest ask. Worth one more pass by the author before anything goes out.
+- Sent 2026-08-04, all four at once (not staggered). Check for replies; do not treat silence as a
+  negative signal for at least 1-2 weeks (matching the bounded-wait convention used elsewhere in this
+  project, e.g. the LatticeBaryon/Yiquan Wang thread).
+- If any of the four reply positively, that becomes the actual real-data validation gate this
+  project's own discipline requires before IP/venture material opens; update
+  `venture/PLACEHOLDER.md` and the relevant gate-result docs when that happens, not before.
+- No claim of funding, incubator acceptance, a patent, or a built platform was made in any of the
+  four; each stated a specific finding and a specific, honest ask, consistent with memory
+  `cv-claims-to-avoid`.
