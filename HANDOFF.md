@@ -13,9 +13,18 @@ failure modes of that baseline (adhesion, particle shape). First validation: the
 prediction error 62% versus the baseline alone (leave-one-out MAE 0.030 vs 0.080), and a regime
 classifier (normal/hindered/caged) beats a majority-class guess (80.6% vs 63.9%). Full detail:
 `docs/gate-result-network-sim-residual-model.md`. Product CLI: `scripts/predict_transport.py`.
-**Not yet validated against real experimental data**, only self-generated simulation; IP/venture
-material still should not open on this alone, per the same gating discipline that applied to the
-Koopman/MZ work (see "New direction" above and memory `ergofluids-ip-gating-discipline`).
+
+Real-data check (`docs/gate-result-network-sim-real-data-check.md`, `scripts/check_wang2026_real_data.py`):
+no dataset exists with mesh geometry in units comparable to the simulator's, so the model itself is
+still untested against real numbers. What was tested instead: the premise it is built on, that
+steric-only obstruction-scaling fails once chemical affinity is present. Real PGSE NMR data on five
+drugs in a hydrogel (Wang 2026, Pharmaceutics) shows exactly that: Spearman rho(size, relative
+diffusivity) = +0.50, the wrong sign for steric-only theory, which requires a strongly negative
+relationship. Premise-level support, not a validation of network_sim's specific predictions.
+
+IP/venture material still should not open on this, per the same gating discipline that applied to
+the Koopman/MZ work (see memory `ergofluids-ip-gating-discipline`); a premise-level real-data check
+is a weaker bar than the real-data gate that discipline requires.
 
 The rest of this file is the (still-accurate, unmodified) history of the earlier Koopman/Mori-Zwanzig
 transport-modeling thesis, which this new direction sits alongside, not on top of.
