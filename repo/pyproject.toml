@@ -23,6 +23,9 @@ dev = ["pytest"]
 # Used only by scripts/build_plos_docx.py, which also needs the system
 # `pandoc` binary (not pip-installable) on PATH.
 submission = ["python-docx"]
+# Used only by scripts/demo_app.py, a minimal web UI over the predictor and
+# active-learning recommender; not needed to use the library or CLI tools.
+demo = ["flask"]
 
 [tool.setuptools.packages.find]
 where = ["src"]

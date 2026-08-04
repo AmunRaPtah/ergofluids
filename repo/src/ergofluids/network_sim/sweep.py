@@ -18,9 +18,10 @@ from dataclasses import dataclass, asdict
 import numpy as np
 
 from ergofluids.koopman.exponent import ssa_denoise_exponent
-from ergofluids.network_sim.baseline import baseline_predicted_exponent, obstruction_scaling_from_network
+from ergofluids.network_sim.baseline import baseline_predicted_exponent
 from ergofluids.network_sim.dynamics import SimParams, simulate_ensemble
 from ergofluids.network_sim.network import generate_network
+from ergofluids.network_sim.rod_dynamics import RodParams, simulate_rod_ensemble
 
 BOX_SIZE = 40.0
 FIBER_LENGTH = 1.5
@@ -55,31 +56,55 @@ class SweepResult:
 
 
 def run_condition(cond: SweepCondition, seed: int) -> SweepResult:
+    """Routes to rigid-body rod dynamics (`rod_dynamics.simulate_rod_ensemble`)
+    for `aspect_ratio > 1`, and the original point-sphere dynamics
+    (`dynamics.simulate_ensemble`) for `aspect_ratio == 1`. Deliberately not
+    unified onto one code path: `rod_dynamics` does not reduce to a point
+    sphere at aspect_ratio = 1 (see its module docstring), so routing every
+    condition through it would silently change the sphere-case physics
+    behind already-reported numbers (e.g. the original 62% MAE reduction
+    result)."""
     rng = np.random.default_rng(seed)
-    params = SimParams(
-        box_size=BOX_SIZE,
-        particle_radius=cond.particle_radius,
-        aspect_ratio=cond.aspect_ratio,
-        adhesion_depth=cond.adhesion_depth,
-        dt=DT,
-    )
-    D0 = params.free_diffusivity
+    is_rod = cond.aspect_ratio > 1.0
+
+    if is_rod:
+        params = RodParams(
+            box_size=BOX_SIZE,
+            particle_radius=cond.particle_radius,
+            aspect_ratio=cond.aspect_ratio,
+            adhesion_depth=cond.adhesion_depth,
+            dt=DT,
+        )
+        gamma_par, gamma_perp, _ = params.drag
+        D0 = params.kT * (1.0 / gamma_par + 1.0 / gamma_perp) / 2.0  # long-time isotropic limit, see rod_dynamics tests
+    else:
+        params = SimParams(
+            box_size=BOX_SIZE,
+            particle_radius=cond.particle_radius,
+            aspect_ratio=1.0,
+            adhesion_depth=cond.adhesion_depth,
+            dt=DT,
+        )
+        D0 = params.free_diffusivity
+
     n_steps = max(int((TARGET_FREE_RMS**2 / (4 * D0)) / DT), MIN_STEPS)
 
     pooled_msd = None
     pore_radii = []
-    baseline_exps = []
     for realization in range(N_NETWORK_REALIZATIONS):
         net = generate_network(
             box_size=BOX_SIZE, n_fibers=cond.n_fibers, fiber_length=FIBER_LENGTH, rng=rng
         )
         pore_radii.append(net.mean_pore_radius())
-        rel_D = obstruction_scaling_from_network(cond.particle_radius, net, fiber_radius=params.fiber_radius)
-        baseline_exps.append(rel_D)  # not used as exponent directly; recorded for diagnostics only
 
-        t, msd = simulate_ensemble(
-            net, params, n_particles=N_PARTICLES, n_steps=n_steps, rng=rng, burn_in_steps=BURN_IN_STEPS
-        )
+        if is_rod:
+            t, msd = simulate_rod_ensemble(
+                net, params, n_particles=N_PARTICLES, n_steps=n_steps, rng=rng, burn_in_steps=BURN_IN_STEPS
+            )
+        else:
+            t, msd = simulate_ensemble(
+                net, params, n_particles=N_PARTICLES, n_steps=n_steps, rng=rng, burn_in_steps=BURN_IN_STEPS
+            )
         pooled_msd = msd.copy() if pooled_msd is None else pooled_msd + msd
 
     pooled_msd /= N_NETWORK_REALIZATIONS
@@ -101,11 +126,15 @@ def run_condition(cond: SweepCondition, seed: int) -> SweepResult:
 
 
 def build_grid() -> list[SweepCondition]:
+    """81 conditions (3^4): expanded from the original 36 (2x3x3x2) after
+    adding rigid-body rod dynamics, both for a sturdier leave-one-out
+    validation sample and to give the new aspect_ratio=2.0 (mild elongation,
+    not just the original 3.0) a data point of its own."""
     conditions = []
-    for n_fibers in (250, 450):  # sparser / denser mesh
-        for radius in (0.25, 0.5, 0.9):
-            for adhesion in (0.0, 1.5, 4.0):
-                for aspect in (1.0, 3.0):
+    for n_fibers in (200, 350, 500):  # sparse / medium / dense mesh
+        for radius in (0.2, 0.5, 0.8):
+            for adhesion in (0.0, 1.5, 3.5):
+                for aspect in (1.0, 2.0, 4.0):
                     conditions.append(
                         SweepCondition(
                             n_fibers=n_fibers,
