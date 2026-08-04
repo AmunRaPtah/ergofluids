@@ -358,6 +358,40 @@ truth at r = 0.991 against a 0.8 bar.
 | 2: error-bar recovery (n = 30 vertices) | median relative error | 1.15% | < 15% | yes |
 | 2: error-bar recovery (n = 30 vertices) | Pearson r | 0.991 | > 0.8 | yes |
 
+### 3.8 External real-figure validation (Gate 8)
+
+Gate 7 validates the extraction machinery against a synthetic panel with an analytically known
+calibration; it does not test the tick-mark calibration step itself, since no independent ground
+truth exists for that step on a real page. As a separate check, the digitization pipeline was
+generalized into a config-driven tool and tested on a real, external figure never otherwise used in
+this study: Fig. 1b of Zhao et al. [22], which labels its own 7%-coverage EA-MSD curve's fitted
+slope as 0.85. The pipeline, including programmatic tick-mark detection, recovered an exponent of
+0.852 (Table 6), a difference of 0.002 from the paper's own stated value.
+
+This test also surfaced a limitation the synthetic case could not: unlike the panels used elsewhere
+in this study, this figure has no plotted per-point error bars, and a slope-reference annotation
+line crossing the curve inflated `reported_error` in the region it crosses, producing a wide,
+asymmetric confidence interval despite the accurate point estimate. The `y` values themselves were
+unaffected. We report this as a scoped limitation of the uncertainty quantification for bare-marker
+figures, not of the extraction itself.
+
+**Table 6. Gate 8: real-figure exponent recovery.**
+
+| quantity | value |
+|---|---|
+| recovered exponent (ssa) | 0.852 |
+| 95% CI | [0.079, 0.869] |
+| paper's own stated value | 0.85 |
+| absolute difference | 0.002 |
+
+A second, independent real-figure test followed, on a different curve, color, and target value in
+the same paper: Fig. 1d's blue `<TA-MSD>` curve at the same 7% coverage, labeled 0.98. A first attempt
+recovered 0.653, a large miss, traced to the panel's own same-colored slope-reference label text
+being binned as curve data; generalizing the tool's single legend-exclusion box into a list of
+exclusion boxes resolved it. The corrected run recovered 0.918 (95% CI [0.844, 1.345]), a difference
+of 0.062 from the paper's stated value. That the two targets (0.85 and 0.98) are far apart rules out
+the pass being an artifact of the estimator drifting toward one particular number.
+
 ## 4. Discussion
 
 The two halves of this study point in different directions on the same question, and we report both
@@ -447,6 +481,13 @@ no independent ground truth to check against, but it does narrow where residual 
 real digitized curves can plausibly come from: calibration and rendering precision (already carried
 through every downstream gate as `digitization_error`), not an undiagnosed flaw in the extraction
 code.
+
+Since generalized into a config-driven tool, the pipeline was also tested end to end on a real,
+external figure it had never seen (Gate 8, Section 3.8), recovering the paper's own stated exponent
+to within 0.002 while surfacing a genuine, now-documented limitation in uncertainty quantification
+for figures without plotted error bars. We regard this as a second, independent line of support for
+the digitization methodology as a reusable contribution, alongside the honest record of where it
+currently falls short.
 
 ## 5. Limitations
 
@@ -569,3 +610,6 @@ stable forecasting with spatial and temporal uncertainty-quantification. arXiv:2
 
 21. Takeishi N, Kawahara Y, Yairi T. Subspace dynamic mode decomposition for stochastic Koopman
 analysis. Phys Rev E. 2017;96(3):033310.
+
+22. Zhao Y, Chen H, Hu M, Xu WS, Wang D. Diffusional aging at water/oil interfaces laden with charged
+nanoparticles studied by single-molecule tracking. Nat Commun. 2026;17:7149.

@@ -14,6 +14,7 @@ dependencies = [
     "matplotlib",
     "pydmd",
     "pykoopman",
+    "pillow",
 ]
 
 [project.optional-dependencies]
