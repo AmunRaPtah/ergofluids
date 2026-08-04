@@ -15,6 +15,7 @@ dependencies = [
     "pydmd",
     "pykoopman",
     "pillow",
+    "scikit-learn",
 ]
 
 [project.optional-dependencies]

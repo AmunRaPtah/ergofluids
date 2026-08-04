@@ -1,8 +1,26 @@
 # ErgoFluids: handoff
 
-Last updated: 2026-07-31.
+Last updated: 2026-08-04.
 
-## State
+## New direction (2026-08-04): network_sim, a fresh technical bet
+
+Per the author's direction to prioritize product building over further publication work, and after
+researching alternatives to the Koopman/Mori-Zwanzig approach (which failed its real-data gates, see
+below), a new module `src/ergofluids/network_sim/` was built and validated this session: a
+self-generated Brownian-dynamics simulator of a probe particle in a random fiber network, an
+obstruction-scaling physics baseline, and a residual/classifier model targeting the two documented
+failure modes of that baseline (adhesion, particle shape). First validation: the residual model cuts
+prediction error 62% versus the baseline alone (leave-one-out MAE 0.030 vs 0.080), and a regime
+classifier (normal/hindered/caged) beats a majority-class guess (80.6% vs 63.9%). Full detail:
+`docs/gate-result-network-sim-residual-model.md`. Product CLI: `scripts/predict_transport.py`.
+**Not yet validated against real experimental data**, only self-generated simulation; IP/venture
+material still should not open on this alone, per the same gating discipline that applied to the
+Koopman/MZ work (see "New direction" above and memory `ergofluids-ip-gating-discipline`).
+
+The rest of this file is the (still-accurate, unmodified) history of the earlier Koopman/Mori-Zwanzig
+transport-modeling thesis, which this new direction sits alongside, not on top of.
+
+## State (Koopman/Mori-Zwanzig thesis, superseded as the active direction)
 
 Phase 1 (synthetic validation) is done and fully resolved. Gate 1 passed for
 all three estimators (loglog, dmd, ssa). Gate 0 failed for the original dmd

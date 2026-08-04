@@ -1,5 +1,12 @@
 # ErgoFluids
 
+**2026-08-04 update**: the Koopman/Mori-Zwanzig thesis below failed its real-data gates (Gate 4,
+Gate 5). The active direction is now `repo/src/ergofluids/network_sim/`, a self-generated
+Brownian-dynamics simulator plus a physics-baseline-and-residual model, with a first validated
+result (62% MAE reduction over the physics baseline alone, leave-one-out). See
+`HANDOFF.md` and `docs/gate-result-network-sim-residual-model.md`. Everything below this line is
+the original thesis, kept for the record, not the current plan.
+
 A research prototype testing whether Koopman operator / Dynamic Mode Decomposition
 methods, extended with a Mori-Zwanzig memory kernel, can usefully model macromolecular
 drug-vehicle transport through dense, non-Newtonian tumor tissue. Started from an idea

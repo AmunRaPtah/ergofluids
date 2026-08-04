@@ -14,3 +14,11 @@ the Alice/Mayo patent-eligibility argument, the tiered royalty model, and the
 unsourced "$10 billion" synthetic royalty market figure. See `cv-claims-to-avoid`
 in project memory for why unsourced patent and revenue claims are treated as a
 real risk here, not boilerplate.
+
+Update, 2026-08-04: a new module (`repo/src/ergofluids/network_sim/`, see
+`docs/gate-result-network-sim-residual-model.md`) shows a promising first
+validation (a residual model beating a physics baseline by 62% MAE, a regime
+classifier beating a majority-class guess) against self-generated simulation
+data. The same rule applies: this is simulation-only, not real-data,
+validation, so it does not open this file either, no matter how good the
+simulated result looks.
