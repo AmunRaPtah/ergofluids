@@ -77,6 +77,33 @@ self-generated simulation data, not yet on any real experimental dataset.
 - 2D, static fibers, one particle at a time (no particle-particle interaction). All stated
   plainly in `dynamics.py`'s module docstring, not just here.
 
+## Update, 2026-08-05: rigid-body rods and an expanded sweep
+
+`dynamics.py`'s aspect-ratio simplification (reduced effective collision radius) was replaced with
+genuine rigid-body rod dynamics (`rod_dynamics.py`: position + orientation, anisotropic drag,
+rotational diffusion, multi-point steric/adhesive interaction along the rod's length; see that
+module's docstring for what's still simplified). The sweep grid was also expanded from 36 to 81
+conditions (3 mesh densities x 3 radii x 3 adhesion depths x 3 aspect ratios, adding an
+aspect_ratio=2.0 point), rerun with the new rod dynamics for all aspect_ratio > 1 conditions
+(aspect_ratio = 1 still uses the original point-sphere dynamics; see `sweep.py`'s docstring for why
+the two are not unified onto one code path).
+
+| metric | 36-condition sweep (2026-08-04) | 81-condition sweep, rigid rods (2026-08-05) |
+|---|---|---|
+| baseline MAE | 0.0799 | 0.0993 |
+| residual-model MAE (leave-one-out) | 0.0300 | 0.0348 |
+| MAE reduction | 62% | **65%** |
+| classifier accuracy (leave-one-out) | 80.6% | **82.7%** |
+| majority-class baseline accuracy | 63.9% | 51.9% |
+| regime distribution | 23 normal / 12 hindered / 1 caged | 42 normal / 37 hindered / 2 caged |
+
+The result strengthened, not just grew: the wider grid produced a far more balanced regime
+distribution, which is why the classifier's margin over the naive baseline nearly doubled (a 17-point
+gap to a 31-point gap), not merely an artifact of a smaller majority class being easier to beat by
+chance (baseline accuracy dropping from 63.9% to 51.9% reflects a harder, more balanced
+classification task, and accuracy still rose regardless). The caged class remains thin (2 of 81) and
+still should not be trusted on its own.
+
 ## Product interface
 
 `scripts/predict_transport.py`: given particle radius, mesh pore radius, adhesion depth, and aspect

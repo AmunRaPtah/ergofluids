@@ -1,6 +1,6 @@
 # ErgoFluids: handoff
 
-Last updated: 2026-08-04.
+Last updated: 2026-08-05.
 
 ## New direction (2026-08-04): network_sim, a fresh technical bet
 
@@ -9,10 +9,16 @@ researching alternatives to the Koopman/Mori-Zwanzig approach (which failed its 
 below), a new module `src/ergofluids/network_sim/` was built and validated this session: a
 self-generated Brownian-dynamics simulator of a probe particle in a random fiber network, an
 obstruction-scaling physics baseline, and a residual/classifier model targeting the two documented
-failure modes of that baseline (adhesion, particle shape). First validation: the residual model cuts
-prediction error 62% versus the baseline alone (leave-one-out MAE 0.030 vs 0.080), and a regime
-classifier (normal/hindered/caged) beats a majority-class guess (80.6% vs 63.9%). Full detail:
-`docs/gate-result-network-sim-residual-model.md`. Product CLI: `scripts/predict_transport.py`.
+failure modes of that baseline (adhesion, particle shape). First validation (36-condition sweep): the
+residual model cut prediction error 62% versus the baseline alone, and a regime classifier
+(normal/hindered/caged) beat a majority-class guess (80.6% vs 63.9%).
+
+**Updated 2026-08-05**: the aspect-ratio simplification was replaced with genuine rigid-body rod
+dynamics (`rod_dynamics.py`), and the sweep expanded to 81 conditions. Result strengthened: MAE
+reduction **65%** (0.035 vs 0.099), classifier accuracy **82.7% vs 51.9%** (the baseline got harder to
+beat too, since the wider grid produced a more balanced regime distribution, 42/37/2 instead of
+23/12/1). Full detail: `docs/gate-result-network-sim-residual-model.md`. Product CLI:
+`scripts/predict_transport.py`.
 
 Real-data check (`docs/gate-result-network-sim-real-data-check.md`, `scripts/check_wang2026_real_data.py`):
 no dataset exists with mesh geometry in units comparable to the simulator's, so the model itself is

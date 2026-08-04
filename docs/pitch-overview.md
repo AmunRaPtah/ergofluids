@@ -41,11 +41,11 @@ tells a lab which candidate to test next once they have a little of their own da
 Two pieces, reflecting two different bets on how much a lab already knows:
 
 **A residual/classifier model** (`network_sim`), built on a self-generated 2D Brownian-dynamics
-simulator of a probe particle in a random fiber network (steric repulsion, adhesion, a shape
-simplification), fit against the obstruction-scaling baseline's own blind spot. On the simulator's
-own 36-condition sweep: cuts prediction error 62% versus the baseline alone (MAE 0.030 vs 0.080,
-leave-one-out), and a regime classifier (normal/hindered/caged) beats a naive majority-class guess
-(80.6% vs 63.9%).
+simulator of a probe particle in a random fiber network (steric repulsion, adhesion, and genuine
+rigid-body rod dynamics for elongated particles, not a simplified stand-in), fit against the
+obstruction-scaling baseline's own blind spot. On the simulator's own 81-condition sweep: cuts
+prediction error 65% versus the baseline alone (MAE 0.035 vs 0.099, leave-one-out), and a regime
+classifier (normal/hindered/caged) beats a naive majority-class guess (82.7% vs 51.9%).
 
 **An active-learning recommender**, for labs that already have a handful of real pilot measurements
 and don't need a zero-shot predictor to get value: a Gaussian Process suggests which untested
@@ -61,8 +61,8 @@ oracle): 28% lower held-out error than random candidate selection, averaged over
 
 | Metric | Value |
 |---|---|
-| Residual model MAE reduction vs baseline (leave-one-out) | 62% (0.030 vs 0.080) |
-| Regime classifier accuracy vs majority-class baseline | 80.6% vs 63.9% |
+| Residual model MAE reduction vs baseline (leave-one-out) | 65% (0.035 vs 0.099, 81-condition sweep) |
+| Regime classifier accuracy vs majority-class baseline | 82.7% vs 51.9% |
 | Active-learning MAE reduction vs random sampling | 28% (0.0253 vs 0.0352) |
 
 All three numbers come from the simulator's own self-generated data, not real experiments. Real,
@@ -75,6 +75,10 @@ evidence the numbers transfer to a real system.
 |---|---|---|
 | Premise check | Wang 2026, real PGSE NMR, 5 drugs | Steric-only theory gets the sign wrong: rho = +0.50, requires << 0 |
 | Baseline formula check | Hadjiev 2014 thesis, real FRAP, 4 real dextran probes | Steric-only parameter drifts 2.4x with probe size, not probe-invariant as required |
+
+Both checks were run against the closed-form obstruction-scaling formula the baseline uses, not the
+full Brownian-dynamics simulator; parameterizing the simulator itself to a real system's exact fiber
+geometry remains undone.
 
 Both real, both independent, both show the same qualitative failure by different mechanisms
 (adhesion; chain flexibility). Neither validates `network_sim`'s own trained predictions on a real
@@ -158,7 +162,7 @@ not as a separate venture at all, is a live one, not resolved by this document e
 hydrogels, but it has two documented failure modes, chemical affinity and chain flexibility, that we
 confirmed independently on two real datasets neither used to build our model. We built a residual
 layer and an active-learning recommender on top of it, validated so far on self-generated simulation
-data with strong internal results (62% error reduction, 28% fewer experiments needed). We're
+data with strong internal results (65% error reduction, 28% fewer experiments needed). We're
 pre-revenue, pre-partner, and the next real step is exactly what it should be: find one lab willing to
 test it against real data."
 

@@ -1,12 +1,14 @@
 # ErgoFluids
 
-**2026-08-04 update**: the Koopman/Mori-Zwanzig thesis below failed its real-data gates (Gate 4,
+**2026-08-05 update**: the Koopman/Mori-Zwanzig thesis below failed its real-data gates (Gate 4,
 Gate 5). The active direction is now `repo/src/ergofluids/network_sim/`: a self-generated
-Brownian-dynamics simulator plus a physics-baseline-and-residual model (62% MAE reduction over the
-baseline alone, leave-one-out), a real-data check on the underlying premise (real PGSE NMR data
-falsifies steric-only obstruction-scaling exactly as expected, Spearman rho = +0.50 where theory
-requires << 0), and an active-learning next-best-experiment recommender (28% lower held-out error
-than random sampling, synthetic validation) for when a lab has its own small pilot dataset. See
+Brownian-dynamics simulator (now with genuine rigid-body rod dynamics, not a simplified stand-in)
+plus a physics-baseline-and-residual model (65% MAE reduction over the baseline alone, leave-one-out,
+81-condition sweep), a real-data check on the underlying premise (real PGSE NMR data falsifies
+steric-only obstruction-scaling exactly as expected, Spearman rho = +0.50 where theory requires <<
+0; a second real dataset, Hadjiev's 2014 thesis, independently confirms the same failure mode by a
+different mechanism), and an active-learning next-best-experiment recommender (28% lower held-out
+error than random sampling, synthetic validation) for when a lab has its own small pilot dataset. See
 `HANDOFF.md` and the `docs/gate-result-network-sim-*` and `docs/gate-result-active-learning-*`
 files. Everything below this line is the original thesis, kept for the record, not the current plan.
 
